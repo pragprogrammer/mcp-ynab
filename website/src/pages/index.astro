@@ -1,0 +1,276 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const tools = [
+  { name: 'Budget & Accounts', desc: 'List budgets, view account balances, and get detailed account info.', icon: '📊' },
+  { name: 'Transactions', desc: 'Query, create, update, and delete transactions. Filter by category, payee, or account.', icon: '💳' },
+  { name: 'Categories & Budgets', desc: 'Browse categories, check monthly budgets, and update allocations.', icon: '📁' },
+  { name: 'Spending Analysis', desc: 'Get money flow data showing income to category group spending patterns.', icon: '📈' },
+  { name: 'Smart Caching', desc: 'Built-in 4-tier caching with delta sync — fast responses, minimal API calls.', icon: '⚡' },
+  { name: 'Scheduled Transactions', desc: 'View recurring transactions and upcoming bills.', icon: '📅' },
+];
+
+const platforms = [
+  {
+    id: 'claude-desktop',
+    name: 'Claude Desktop',
+    config: `{
+  "mcpServers": {
+    "ynab": {
+      "command": "uvx",
+      "args": ["ynab-mcp"],
+      "env": {
+        "YNAB_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}`,
+    note: 'Config location — macOS: ~/Library/Application Support/Claude/claude_desktop_config.json · Windows: %APPDATA%\\Claude\\claude_desktop_config.json',
+  },
+  {
+    id: 'claude-code',
+    name: 'Claude Code',
+    config: `claude mcp add ynab -- uvx ynab-mcp`,
+    note: 'Set YNAB_API_KEY in your environment before running.',
+  },
+  {
+    id: 'chatgpt',
+    name: 'ChatGPT',
+    config: `{
+  "mcpServers": {
+    "ynab": {
+      "command": "uvx",
+      "args": ["ynab-mcp"],
+      "env": {
+        "YNAB_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}`,
+    note: 'Requires ChatGPT Plus with MCP support enabled.',
+  },
+];
+---
+
+<Layout>
+  <!-- Nav -->
+  <nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl">
+    <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="#" class="text-lg font-semibold tracking-tight">
+        <span class="text-cyan-400">YNAB</span> <span class="text-gray-400 font-normal">MCP</span>
+      </a>
+      <div class="flex items-center gap-6 text-sm text-gray-400">
+        <a href="#features" class="hover:text-gray-100 transition-colors hidden sm:block">Features</a>
+        <a href="#install" class="hover:text-gray-100 transition-colors hidden sm:block">Install</a>
+        <a href="https://github.com/mgreen-bishs/BudgetLens" target="_blank" rel="noopener" class="hover:text-gray-100 transition-colors flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="relative pt-32 pb-20 px-6 overflow-hidden">
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(6,182,212,0.15)_0%,_transparent_50%)]"></div>
+      <div class="relative max-w-3xl mx-auto text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 text-xs text-gray-400 mb-8">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+          Open source MCP server for YNAB
+        </div>
+        <h1 class="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
+          Your AI assistant.<br />
+          <span class="text-cyan-400">Your budget.</span><br />
+          Zero friction.
+        </h1>
+        <p class="text-lg text-gray-400 max-w-xl mx-auto mb-10">
+          Connect Claude, ChatGPT, or any MCP-compatible AI to your YNAB budget.
+          Ask questions about your money in plain English.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="#install" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors w-full sm:w-auto text-center">
+            Get Started
+          </a>
+          <a href="https://github.com/mgreen-bishs/BudgetLens" target="_blank" rel="noopener" class="px-6 py-3 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-gray-100 transition-colors w-full sm:w-auto text-center">
+            View on GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Example prompts -->
+    <section class="py-12 px-6 fade-in opacity-0 translate-y-4 transition-all duration-700">
+      <div class="max-w-3xl mx-auto">
+        <div class="bg-[#141414] border border-white/5 rounded-xl overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-3 bg-[#1a1a1a] border-b border-white/5">
+            <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+            <span class="ml-2 text-xs text-gray-500 font-mono">claude</span>
+          </div>
+          <div class="p-6 font-mono text-sm space-y-2 text-gray-300">
+            <p><span class="text-cyan-400">❯</span> Where did my money go this month?</p>
+            <p><span class="text-cyan-400">❯</span> How much did I spend on groceries in February?</p>
+            <p><span class="text-cyan-400">❯</span> Show me all transactions over $100 this month</p>
+            <p><span class="text-cyan-400">❯</span> Am I over budget on dining out?</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-20 px-6">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="text-3xl font-bold text-center mb-3">30+ YNAB Tools</h2>
+        <p class="text-gray-400 text-center mb-12 max-w-xl mx-auto">
+          Full read &amp; write access to your YNAB budget through the Model Context Protocol.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {tools.map((tool) => (
+            <div class="fade-in opacity-0 translate-y-4 transition-all duration-700 bg-[#141414] border border-white/5 rounded-xl p-5 hover:border-cyan-400/20 transition-colors">
+              <div class="text-2xl mb-3">{tool.icon}</div>
+              <h3 class="font-semibold mb-1">{tool.name}</h3>
+              <p class="text-sm text-gray-400">{tool.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Install -->
+    <section id="install" class="py-20 px-6">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-3xl font-bold text-center mb-3">Setup</h2>
+        <p class="text-gray-400 text-center mb-12">Two steps. No server to host. No account to create.</p>
+
+        <!-- Step 1: API Key -->
+        <div class="mb-12 fade-in opacity-0 translate-y-4 transition-all duration-700">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-400/10 text-cyan-400 text-sm font-bold">1</span>
+            <h3 class="text-xl font-semibold">Get your YNAB API key</h3>
+          </div>
+          <div class="bg-[#141414] border border-white/5 rounded-xl p-5 text-sm text-gray-300">
+            <p class="mb-2">
+              Go to <a href="https://app.ynab.com/settings/developer" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">YNAB Developer Settings</a> and create a new personal access token.
+            </p>
+            <p class="text-gray-500">Your API key stays on your machine — it's never sent anywhere except directly to YNAB's API.</p>
+          </div>
+        </div>
+
+        <!-- Step 2: Configure platform -->
+        <div class="fade-in opacity-0 translate-y-4 transition-all duration-700">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-400/10 text-cyan-400 text-sm font-bold">2</span>
+            <h3 class="text-xl font-semibold">Configure your AI platform</h3>
+          </div>
+
+          <div class="border border-white/5 rounded-xl overflow-hidden">
+            <!-- Tabs -->
+            <div class="flex border-b border-white/5 bg-[#141414]" id="platform-tabs">
+              {platforms.map((platform, i) => (
+                <button
+                  class:list={[
+                    'px-4 py-3 text-sm font-medium transition-colors cursor-pointer',
+                    'hover:text-gray-100',
+                    i === 0 ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-500',
+                  ]}
+                  data-tab={i}
+                >
+                  {platform.name}
+                </button>
+              ))}
+            </div>
+
+            <!-- Panels -->
+            {platforms.map((platform, i) => (
+              <div
+                class:list={['p-5', i === 0 ? '' : 'hidden']}
+                data-panel={i}
+              >
+                <div class="relative">
+                  <pre class="bg-[#0a0a0a] border border-white/5 rounded-lg p-4 text-sm text-gray-300 overflow-x-auto font-mono"><code>{platform.config}</code></pre>
+                  <button
+                    class="absolute top-3 right-3 p-1.5 text-gray-500 hover:text-gray-300 transition-colors rounded copy-btn"
+                    data-code={platform.config}
+                    aria-label="Copy to clipboard"
+                  >
+                    <svg class="w-4 h-4 copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    <svg class="w-4 h-4 check-icon hidden text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                  </button>
+                </div>
+                {platform.note && (
+                  <p class="text-xs text-gray-500 mt-3">{platform.note}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Privacy -->
+    <section class="py-16 px-6 fade-in opacity-0 translate-y-4 transition-all duration-700">
+      <div class="max-w-3xl mx-auto text-center">
+        <div class="bg-[#141414] border border-white/5 rounded-xl p-8">
+          <h3 class="text-xl font-semibold mb-3">Your data stays yours</h3>
+          <p class="text-gray-400 text-sm max-w-lg mx-auto">
+            This MCP server runs locally on your machine. Your YNAB API key and budget data are never sent to any third party —
+            only directly to YNAB's official API. The source code is fully open.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 py-12 px-6">
+      <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="text-sm text-gray-500">
+          <span class="text-cyan-400 font-semibold">YNAB</span> MCP Server · Open Source
+        </div>
+        <div class="flex items-center gap-6 text-sm text-gray-400">
+          <a href="https://github.com/mgreen-bishs/BudgetLens" target="_blank" rel="noopener" class="hover:text-gray-100 transition-colors">GitHub</a>
+          <a href="https://github.com/mgreen-bishs/BudgetLens/issues" target="_blank" rel="noopener" class="hover:text-gray-100 transition-colors">Issues</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+</Layout>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('[data-tab]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const index = tab.getAttribute('data-tab');
+
+      document.querySelectorAll('[data-tab]').forEach((t) => {
+        t.classList.remove('text-cyan-400', 'border-b-2', 'border-cyan-400');
+        t.classList.add('text-gray-500');
+      });
+      tab.classList.add('text-cyan-400', 'border-b-2', 'border-cyan-400');
+      tab.classList.remove('text-gray-500');
+
+      document.querySelectorAll('[data-panel]').forEach((p) => {
+        p.classList.toggle('hidden', p.getAttribute('data-panel') !== index);
+      });
+    });
+  });
+
+  // Copy to clipboard
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const code = btn.getAttribute('data-code') || '';
+      navigator.clipboard.writeText(code);
+
+      const copyIcon = btn.querySelector('.copy-icon') as HTMLElement;
+      const checkIcon = btn.querySelector('.check-icon') as HTMLElement;
+      copyIcon.classList.add('hidden');
+      checkIcon.classList.remove('hidden');
+
+      setTimeout(() => {
+        copyIcon.classList.remove('hidden');
+        checkIcon.classList.add('hidden');
+      }, 2000);
+    });
+  });
+</script>

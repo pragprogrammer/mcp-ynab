@@ -1,4 +1,4 @@
-from server.models import (
+from src.models import (
     Account,
     BudgetDetail,
     BudgetSummary,
@@ -10,12 +10,12 @@ from server.models import (
     ScheduledTransaction,
     Transaction,
 )
-from server.models.account import ACCOUNT_DISPLAY_EXCLUDE
-from server.models.budget import BUDGET_SUMMARY_DISPLAY_EXCLUDE
-from server.models.category import CATEGORY_DETAIL_INCLUDE, CATEGORY_LIST_EXCLUDE
-from server.models.month import MONTH_DISPLAY_EXCLUDE
-from server.models.payee import PAYEE_DISPLAY_EXCLUDE
-from server.models.transaction import SCHEDULED_TRANSACTION_DISPLAY_EXCLUDE, TRANSACTION_DISPLAY_EXCLUDE
+from src.models.account import ACCOUNT_DISPLAY_EXCLUDE
+from src.models.budget import BUDGET_SUMMARY_DISPLAY_EXCLUDE
+from src.models.category import CATEGORY_DETAIL_INCLUDE, CATEGORY_LIST_EXCLUDE
+from src.models.month import MONTH_DISPLAY_EXCLUDE
+from src.models.payee import PAYEE_DISPLAY_EXCLUDE
+from src.models.transaction import SCHEDULED_TRANSACTION_DISPLAY_EXCLUDE, TRANSACTION_DISPLAY_EXCLUDE
 
 
 class TestTransaction:

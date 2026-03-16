@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --color-midnight: #0a0a0a;
+  --color-surface: #141414;
+  --color-surface-light: #1e1e1e;
+  --color-border: #2a2a2a;
+  --color-accent: #06b6d4;
+  --color-accent-light: #22d3ee;
+  --color-ynab-blue: #4a90d9;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}

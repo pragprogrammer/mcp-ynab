@@ -15,4 +15,10 @@ wheels/
 
 # Node.js
 node_modules/
-.next/
+
+# Astro
+website/dist/
+website/.astro/
+
+# Vercel
+.vercel
