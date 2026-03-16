@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { Message } from "ai";
+import type { UIMessage } from "ai";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "./message-bubble";
 import { ToolInvocation } from "./tool-invocation";
 import { Loader2 } from "lucide-react";
 
 interface MessageListProps {
-  messages: Message[];
+  messages: UIMessage[];
   isLoading: boolean;
 }
 
@@ -35,7 +35,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
         )}
         {messages.map((message) => (
           <div key={message.id}>
-            {message.parts?.map((part, i) => {
+            {message.parts.map((part, i) => {
               if (part.type === "text" && part.text.trim()) {
                 return (
                   <MessageBubble
@@ -45,9 +45,23 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
                   />
                 );
               }
-              if (part.type === "tool-invocation") {
+              if (part.type.startsWith("tool-")) {
+                const toolPart = part as {
+                  type: string;
+                  toolCallId: string;
+                  state: string;
+                  input?: Record<string, unknown>;
+                  output?: unknown;
+                };
                 return (
-                  <ToolInvocation key={i} toolInvocation={part.toolInvocation} />
+                  <ToolInvocation
+                    key={i}
+                    toolName={part.type.replace(/^tool-/, "")}
+                    toolCallId={toolPart.toolCallId}
+                    state={toolPart.state}
+                    input={toolPart.input}
+                    output={toolPart.output}
+                  />
                 );
               }
               return null;

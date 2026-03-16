@@ -72,7 +72,7 @@ export async function getMcpTools(): Promise<Record<string, CoreTool>> {
 
     aiTools[mcpTool.name] = tool({
       description: mcpTool.description ?? mcpTool.name,
-      parameters: zodSchema,
+      inputSchema: zodSchema,
       execute: async (args) => {
         const result = await client.callTool({
           name: mcpTool.name,

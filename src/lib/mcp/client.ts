@@ -2,7 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import path from "path";
 
-const REPO_ROOT = path.resolve(process.cwd(), "..");
+const REPO_ROOT = process.cwd();
 
 interface McpClientState {
   client: Client;
@@ -17,13 +17,17 @@ const globalForMcp = globalThis as unknown as {
 async function createClient(): Promise<McpClientState> {
   const transport = new StdioClientTransport({
     command: "uv",
-    args: ["run", "python", "-m", "src.server"],
+    args: ["run", "python", "-m", "server.server"],
     cwd: REPO_ROOT,
     env: {
       ...process.env,
       YNAB_API_KEY: process.env.YNAB_API_KEY ?? "",
     },
     stderr: "pipe",
+  });
+
+  transport.stderr?.on("data", (chunk: Buffer) => {
+    console.error("[MCP Server]", chunk.toString());
   });
 
   const client = new Client(

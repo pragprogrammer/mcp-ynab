@@ -4,22 +4,20 @@ import { Loader2, Wrench, CheckCircle2 } from "lucide-react";
 import { ToolResultRenderer } from "@/components/viz/tool-result-renderer";
 
 interface ToolInvocationProps {
-  toolInvocation: {
-    toolCallId: string;
-    toolName: string;
-    args: Record<string, unknown>;
-    state: "call" | "partial-call" | "result";
-    result?: unknown;
-  };
+  toolName: string;
+  toolCallId: string;
+  state: string;
+  input?: Record<string, unknown>;
+  output?: unknown;
 }
 
 function formatToolName(name: string): string {
   return name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function ToolInvocation({ toolInvocation }: ToolInvocationProps) {
-  const { toolName, args, state, result } = toolInvocation;
-  const isComplete = state === "result";
+export function ToolInvocation({ toolName, toolCallId, state, input, output }: ToolInvocationProps) {
+  const isComplete = state === "output-available";
+  const args = input ?? {};
 
   return (
     <div className="my-2 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm">
@@ -40,9 +38,9 @@ export function ToolInvocation({ toolInvocation }: ToolInvocationProps) {
           </span>
         )}
       </div>
-      {isComplete && result != null && (
+      {isComplete && output != null && (
         <div className="border-t border-[var(--border)] p-3">
-          <ToolResultRenderer toolName={toolName} result={result as string} />
+          <ToolResultRenderer toolName={toolName} result={output as string} />
         </div>
       )}
     </div>

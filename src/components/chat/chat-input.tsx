@@ -1,13 +1,13 @@
 "use client";
 
-import type { ChangeEvent, FormEvent } from "react";
+import type { FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { SendHorizonal } from "lucide-react";
 
 interface ChatInputProps {
   input: string;
   isLoading: boolean;
-  onInputChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  onInputChange: (value: string) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
 }
 
@@ -25,7 +25,7 @@ export function ChatInput({
       <div className="mx-auto flex max-w-3xl items-end gap-2">
         <textarea
           value={input}
-          onChange={onInputChange}
+          onChange={(e) => onInputChange(e.target.value)}
           placeholder="Ask about your budget..."
           rows={1}
           className="flex-1 resize-none rounded-xl border border-[var(--input)] bg-transparent px-4 py-3 text-sm placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
