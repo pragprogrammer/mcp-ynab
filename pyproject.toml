@@ -1,0 +1,44 @@
+[project]
+name = "mcp-ynab"
+version = "0.1.0"
+description = "MCP server that connects AI assistants to your YNAB budget"
+readme = "README.md"
+license = "AGPL-3.0-only"
+requires-python = ">=3.13"
+authors = [{ name = "Matt Green" }]
+keywords = ["ynab", "mcp", "budget", "ai", "model-context-protocol"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial",
+]
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.26.0",
+    "pydantic>=2.11.3",
+    "pydantic-settings>=2.9.1",
+    "sqlalchemy[asyncio]>=2.0.41",
+    "aiosqlite>=0.21.0",
+]
+
+[project.scripts]
+mcp-ynab = "src.server:main"
+
+[project.urls]
+Homepage = "https://github.com/pragprogrammer/mcp-ynab"
+Repository = "https://github.com/pragprogrammer/mcp-ynab"
+Issues = "https://github.com/pragprogrammer/mcp-ynab/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=0.26.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
