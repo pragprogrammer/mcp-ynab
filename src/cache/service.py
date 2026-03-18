@@ -309,6 +309,13 @@ class CacheService:
         await self.delta.upsert_entities(budget_id, "transaction", [txn])
         return txn
 
+    async def update_transactions(
+        self, transactions: list[dict], budget_id: str
+    ) -> list[Transaction]:
+        txns = await self.client.update_transactions(transactions, budget_id)
+        await self.delta.upsert_entities(budget_id, "transaction", txns)
+        return txns
+
     async def delete_transaction(self, transaction_id: str, budget_id: str) -> Transaction:
         txn = await self.client.delete_transaction(transaction_id, budget_id)
         await self.delta.upsert_entities(budget_id, "transaction", [txn])
