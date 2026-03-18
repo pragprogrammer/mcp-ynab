@@ -12,6 +12,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --group dev
       - run: uv run pytest
+        env:
+          YNAB_API_KEY: test-dummy-key
 
   publish:
     needs: test
