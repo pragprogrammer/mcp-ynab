@@ -331,6 +331,51 @@ class TestDeleteTransaction:
         assert result["id"] == "txn-1"
 
 
+class TestUpdateTransactions:
+    @pytest.mark.asyncio
+    async def test_converts_amounts_to_milliunits(self, mock_cache):
+        from src.server import update_transactions
+
+        mock_cache.update_transactions = AsyncMock(
+            return_value=[_make_transaction(id="t1"), _make_transaction(id="t2")]
+        )
+        await update_transactions(
+            budget_id="bud-1",
+            transactions=[
+                {"id": "t1", "amount": -25.50},
+                {"id": "t2", "amount": 10.00},
+            ],
+        )
+        prepared = mock_cache.update_transactions.call_args[0][0]
+        assert prepared[0]["amount"] == -25500
+        assert prepared[1]["amount"] == 10000
+
+    @pytest.mark.asyncio
+    async def test_only_includes_provided_fields(self, mock_cache):
+        from src.server import update_transactions
+
+        mock_cache.update_transactions = AsyncMock(
+            return_value=[_make_transaction(id="t1")]
+        )
+        await update_transactions(
+            budget_id="bud-1",
+            transactions=[{"id": "t1", "memo": "updated"}],
+        )
+        prepared = mock_cache.update_transactions.call_args[0][0]
+        assert prepared[0] == {"id": "t1", "memo": "updated"}
+
+    @pytest.mark.asyncio
+    async def test_requires_id_per_transaction(self, mock_cache):
+        from src.server import update_transactions
+
+        result = json.loads(await update_transactions(
+            budget_id="bud-1",
+            transactions=[{"memo": "no id here"}],
+        ))
+        assert "error" in result
+        assert "id" in result["error"]
+
+
 # ── Category Tools ────────────────────────────────────────────
 
 

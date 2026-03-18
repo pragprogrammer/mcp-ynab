@@ -351,6 +351,62 @@ async def delete_transaction(transaction_id: str, budget_id: str) -> str:
     return json.dumps(txn.model_dump(by_alias=True, exclude=TRANSACTION_DISPLAY_EXCLUDE), indent=2)
 
 
+@mcp.tool()
+@handle_errors
+async def update_transactions(
+    budget_id: str,
+    transactions: list[dict],
+) -> str:
+    """Update multiple transactions in a single API call. Each transaction must include its ID.
+
+    Only provided fields are updated (sparse update). Ideal for bulk recategorization,
+    bulk approval, bulk clearing, etc.
+
+    Args:
+        budget_id: The budget ID (use list_budgets to find available IDs)
+        transactions: List of transaction dicts, each requiring:
+            - id: The transaction ID to update
+            And optionally:
+            - account_id: New account ID
+            - date: New date (YYYY-MM-DD)
+            - amount: New amount in dollars (negative for outflow, positive for inflow)
+            - payee_name: New payee name
+            - category_id: New category ID
+            - memo: New memo
+            - cleared: 'cleared', 'uncleared', or 'reconciled'
+            - approved: Whether the transaction is approved
+            - flag_color: Flag color ('red', 'orange', 'yellow', 'green', 'blue', 'purple', or null)
+    """
+    prepared = []
+    for txn_input in transactions:
+        if "id" not in txn_input:
+            return json.dumps({"error": "Each transaction must include an 'id' field"})
+        txn: dict = {"id": txn_input["id"]}
+        if "account_id" in txn_input:
+            txn["account_id"] = txn_input["account_id"]
+        if "date" in txn_input:
+            txn["date"] = txn_input["date"]
+        if "amount" in txn_input:
+            txn["amount"] = int(txn_input["amount"] * 1000)
+        if "payee_name" in txn_input:
+            txn["payee_name"] = txn_input["payee_name"]
+        if "category_id" in txn_input:
+            txn["category_id"] = txn_input["category_id"]
+        if "memo" in txn_input:
+            txn["memo"] = txn_input["memo"]
+        if "cleared" in txn_input:
+            txn["cleared"] = txn_input["cleared"]
+        if "approved" in txn_input:
+            txn["approved"] = txn_input["approved"]
+        if "flag_color" in txn_input:
+            txn["flag_color"] = txn_input["flag_color"]
+        prepared.append(txn)
+
+    txns = await cache.update_transactions(prepared, budget_id)
+    result = [t.model_dump(by_alias=True, exclude=TRANSACTION_DISPLAY_EXCLUDE) for t in txns]
+    return json.dumps(result, indent=2)
+
+
 # ── Category Tools ───────────────────────────────────────────
 
 

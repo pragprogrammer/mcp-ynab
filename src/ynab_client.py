@@ -225,6 +225,17 @@ class YNABClient:
         )
         return Transaction.model_validate(data["data"]["transaction"])
 
+    async def update_transactions(
+        self, transactions: list[dict], budget_id: str
+    ) -> list[Transaction]:
+        data = await self._patch(
+            f"/budgets/{budget_id}/transactions",
+            json={"transactions": transactions},
+        )
+        return [
+            Transaction.model_validate(t) for t in data["data"]["transactions"]
+        ]
+
     async def delete_transaction(self, transaction_id: str, budget_id: str) -> Transaction:
         data = await self._delete(f"/budgets/{budget_id}/transactions/{transaction_id}")
         return Transaction.model_validate(data["data"]["transaction"])

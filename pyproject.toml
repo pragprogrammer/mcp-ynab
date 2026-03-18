@@ -1,11 +1,11 @@
 [project]
 name = "mcp-ynab"
-version = "0.1.0"
+version = "0.3.0"
 description = "MCP server that connects AI assistants to your YNAB budget"
 readme = "README.md"
 license = "AGPL-3.0-only"
 requires-python = ">=3.13"
-authors = [{ name = "Matt Green" }]
+authors = [{ name = "Michael Green" }]
 keywords = ["ynab", "mcp", "budget", "ai", "model-context-protocol"]
 classifiers = [
     "Development Status :: 4 - Beta",
