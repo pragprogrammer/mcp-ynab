@@ -33,50 +33,9 @@ const useCases = [
     icon: '⚡',
   },
 ];
-
-const platforms = [
-  {
-    id: 'claude-desktop-chatgpt',
-    name: 'Claude Desktop / ChatGPT',
-    config: `{
-  "mcpServers": {
-    "ynab": {
-      "command": "uvx",
-      "args": ["mcp-ynab"],
-      "env": {
-        "YNAB_API_KEY": "your-api-key-here"
-      }
-    }
-  }
-}`,
-  },
-  {
-    id: 'claude-code',
-    name: 'Claude Code',
-    config: `claude mcp add-json ynab --scope user '{"type":"stdio","command":"uvx","args":["mcp-ynab"],"env":{"YNAB_API_KEY":"your-api-key-here"}}'`,
-    note: 'Replace your-api-key-here with your YNAB personal access token.',
-  },
-];
 ---
 
 <Layout>
-  <!-- Nav -->
-  <nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl">
-    <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-      <a href="#" class="text-lg font-semibold tracking-tight">
-        <span class="text-cyan-400">YNAB</span> <span class="text-gray-400 font-normal">MCP</span>
-      </a>
-      <div class="flex items-center gap-6 text-sm text-gray-400">
-        <a href="#why" class="hover:text-gray-100 transition-colors hidden sm:block">Why</a>
-        <a href="#install" class="hover:text-gray-100 transition-colors hidden sm:block">Install</a>
-        <a href="https://github.com/pragprogrammer/mcp-ynab" target="_blank" rel="noopener" class="hover:text-gray-100 transition-colors flex items-center gap-1.5">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-          GitHub
-        </a>
-      </div>
-    </div>
-  </nav>
-
   <main>
     <!-- Hero -->
     <section class="relative pt-32 pb-20 px-6 overflow-hidden">
@@ -88,16 +47,15 @@ const platforms = [
           Open source MCP server for YNAB
         </div>
         <h1 class="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
-          Ask your budget<br />
-          <span class="text-cyan-400">questions YNAB can't answer.</span>
+          Talk to your budget<br />
+          <span class="text-cyan-400">in plain English.</span>
         </h1>
         <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
-          YNAB is great at tracking your money. But it can't compare spending year-over-year, generate custom reports,
-          or catch up on months of uncategorized transactions. This MCP server connects your AI assistant directly to your
-          YNAB data so you can.
+          Connect your AI assistant directly to YNAB and manage your budget through conversation.
+          Analyze spending trends, categorize months of transactions, and generate custom reports — all in natural language.
         </p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="#install" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors w-full sm:w-auto text-center">
+          <a href="/setup" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors w-full sm:w-auto text-center">
             Get Started
           </a>
           <a href="https://github.com/pragprogrammer/mcp-ynab" target="_blank" rel="noopener" class="px-6 py-3 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-gray-100 transition-colors w-full sm:w-auto text-center">
@@ -107,7 +65,7 @@ const platforms = [
       </div>
     </section>
 
-    <!-- Example prompts — show things YNAB can't do -->
+    <!-- Example prompts -->
     <section class="py-12 px-6 fade-in opacity-0 translate-y-4 transition-all duration-700">
       <div class="max-w-3xl mx-auto">
         <div class="bg-[#141414] border border-white/5 rounded-xl overflow-hidden">
@@ -128,8 +86,8 @@ const platforms = [
       </div>
     </section>
 
-    <!-- Why — not what -->
-    <section id="why" class="py-20 px-6">
+    <!-- Why -->
+    <section class="py-20 px-6">
       <div class="max-w-5xl mx-auto">
         <h2 class="text-3xl font-bold text-center mb-3">Not a replacement for YNAB.<br/> A power tool on top of it.</h2>
         <p class="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
@@ -181,166 +139,7 @@ const platforms = [
       </div>
     </section>
 
-    <!-- Install -->
-    <section id="install" class="py-20 px-6">
-      <div class="max-w-3xl mx-auto">
-        <h2 class="text-3xl font-bold text-center mb-3">Setup</h2>
-        <p class="text-gray-400 text-center mb-12">Three steps. No server to host. No account to create.</p>
-
-        <!-- Step 1: Install uv -->
-        <div class="mb-12 fade-in opacity-0 translate-y-4 transition-all duration-700">
-          <div class="flex items-center gap-3 mb-4">
-            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-400/10 text-cyan-400 text-sm font-bold">1</span>
-            <h3 class="text-xl font-semibold">Install uv</h3>
-          </div>
-          <div class="bg-[#141414] border border-white/5 rounded-xl p-5 text-sm text-gray-300">
-            <p class="mb-3">
-              <a href="https://docs.astral.sh/uv/" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">uv</a> is a fast Python package runner. It handles everything automatically — no Python install needed.
-            </p>
-            <div class="space-y-2">
-              <div>
-                <p class="text-xs text-gray-500 mb-1">macOS / Linux:</p>
-                <div class="relative">
-                  <pre class="bg-[#0a0a0a] border border-white/5 rounded-lg px-4 py-2.5 font-mono text-cyan-400 overflow-x-auto">curl -LsSf https://astral.sh/uv/install.sh | sh</pre>
-                  <button class="absolute top-2 right-2 p-1.5 text-gray-500 hover:text-gray-300 transition-colors rounded copy-btn" data-code="curl -LsSf https://astral.sh/uv/install.sh | sh" aria-label="Copy to clipboard">
-                    <svg class="w-4 h-4 copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                    <svg class="w-4 h-4 check-icon hidden text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                  </button>
-                </div>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 mb-1">Windows (PowerShell):</p>
-                <div class="relative">
-                  <pre class="bg-[#0a0a0a] border border-white/5 rounded-lg px-4 py-2.5 font-mono text-cyan-400 overflow-x-auto">powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</pre>
-                  <button class="absolute top-2 right-2 p-1.5 text-gray-500 hover:text-gray-300 transition-colors rounded copy-btn" data-code='powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"' aria-label="Copy to clipboard">
-                    <svg class="w-4 h-4 copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                    <svg class="w-4 h-4 check-icon hidden text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <p class="text-gray-500 mt-3 text-xs">Already have uv? Skip this step.</p>
-          </div>
-        </div>
-
-        <!-- Step 2: API Key -->
-        <div class="mb-12 fade-in opacity-0 translate-y-4 transition-all duration-700">
-          <div class="flex items-center gap-3 mb-4">
-            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-400/10 text-cyan-400 text-sm font-bold">2</span>
-            <h3 class="text-xl font-semibold">Get your YNAB API key</h3>
-          </div>
-          <div class="bg-[#141414] border border-white/5 rounded-xl p-5 text-sm text-gray-300">
-            <p class="mb-2">
-              Go to <a href="https://app.ynab.com/settings/developer" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">YNAB Developer Settings</a> and create a new personal access token.
-            </p>
-            <p class="text-gray-500">Your API key stays on your machine — it's never sent anywhere except directly to YNAB's API.</p>
-          </div>
-        </div>
-
-        <!-- Step 3: Configure platform -->
-        <div class="fade-in opacity-0 translate-y-4 transition-all duration-700">
-          <div class="flex items-center gap-3 mb-4">
-            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-400/10 text-cyan-400 text-sm font-bold">3</span>
-            <h3 class="text-xl font-semibold">Configure your AI platform</h3>
-          </div>
-
-          <div class="border border-white/5 rounded-xl overflow-hidden">
-            <!-- Tabs -->
-            <div class="flex border-b border-white/5 bg-[#141414]" id="platform-tabs">
-              {platforms.map((platform, i) => (
-                <button
-                  class:list={[
-                    'px-4 py-3 text-sm font-medium transition-colors cursor-pointer',
-                    'hover:text-gray-100',
-                    i === 0 ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-500',
-                  ]}
-                  data-tab={i}
-                >
-                  {platform.name}
-                </button>
-              ))}
-            </div>
-
-            <!-- Panels -->
-            {platforms.map((platform, i) => (
-              <div
-                class:list={['p-5', i === 0 ? '' : 'hidden']}
-                data-panel={i}
-              >
-                <div class="relative">
-                  <pre class="bg-[#0a0a0a] border border-white/5 rounded-lg p-4 text-sm text-gray-300 overflow-x-auto font-mono"><code>{platform.config}</code></pre>
-                  <button
-                    class="absolute top-3 right-3 p-1.5 text-gray-500 hover:text-gray-300 transition-colors rounded copy-btn"
-                    data-code={platform.config}
-                    aria-label="Copy to clipboard"
-                  >
-                    <svg class="w-4 h-4 copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                    <svg class="w-4 h-4 check-icon hidden text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                  </button>
-                </div>
-                {platform.note && (
-                  <p class="text-xs text-gray-500 mt-3">{platform.note}</p>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <!-- Config file locations -->
-          <details class="mt-4 border border-white/5 rounded-xl bg-[#141414] overflow-hidden">
-            <summary class="px-5 py-3 text-sm text-gray-400 cursor-pointer hover:text-gray-200 transition-colors select-none">Config file locations</summary>
-            <div class="px-5 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
-              <div>
-                <h4 class="text-cyan-400 font-semibold mb-1">Claude Desktop (JSON)</h4>
-                <p class="text-gray-500 text-xs">macOS: <code class="text-gray-300">~/Library/Application Support/Claude/claude_desktop_config.json</code></p>
-                <p class="text-gray-500 text-xs">Windows: <code class="text-gray-300">%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json</code></p>
-                <p class="text-amber-400/60 text-xs mt-1">Note: The "Edit Config" button in Claude opens the wrong path on Windows (<a href="https://github.com/anthropics/claude-code/issues/26073" target="_blank" rel="noopener" class="hover:underline">known bug</a>)</p>
-              </div>
-              <div>
-                <h4 class="text-cyan-400 font-semibold mb-1">Claude Code (CLI)</h4>
-                <p class="text-gray-500 text-xs">User scope: <code class="text-gray-300">~/.claude.json</code></p>
-                <p class="text-gray-500 text-xs">Use <code class="text-gray-300">claude mcp add-json --scope user</code> for global access</p>
-              </div>
-              <div>
-                <h4 class="text-cyan-400 font-semibold mb-1">ChatGPT Desktop (JSON)</h4>
-                <p class="text-gray-500 text-xs">macOS: <code class="text-gray-300">~/Library/Application Support/ChatGPT/chatgpt_config.json</code></p>
-                <p class="text-gray-500 text-xs">Windows: <code class="text-gray-300">%APPDATA%\ChatGPT\chatgpt_config.json</code></p>
-              </div>
-              <div>
-                <h4 class="text-cyan-400 font-semibold mb-1">Gemini CLI (JSON)</h4>
-                <p class="text-gray-500 text-xs">All platforms: <code class="text-gray-300">~/.gemini/settings.json</code></p>
-              </div>
-            </div>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <!-- Troubleshooting -->
-    <section id="troubleshooting" class="py-16 px-6 fade-in opacity-0 translate-y-4 transition-all duration-700">
-      <div class="max-w-3xl mx-auto">
-        <h2 class="text-2xl font-bold text-center mb-8">Troubleshooting</h2>
-        <div class="space-y-4">
-          <div class="bg-[#141414] border border-white/5 rounded-xl p-6">
-            <h3 class="text-sm font-semibold text-amber-400 mb-2">Windows: MCP server not loading / config not found</h3>
-            <p class="text-gray-400 text-sm mb-2">
-              Claude Desktop on Windows uses MSIX packaging, which redirects the config file to a different path than what the "Edit Config" button shows. This is a <a href="https://github.com/anthropics/claude-code/issues/26073" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">known bug</a>.
-            </p>
-            <p class="text-gray-400 text-sm">
-              Edit the config file at this path instead:<br />
-              <code class="text-cyan-400/80 text-xs break-all">%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json</code>
-            </p>
-          </div>
-          <div class="bg-[#141414] border border-white/5 rounded-xl p-6">
-            <h3 class="text-sm font-semibold text-amber-400 mb-2">Windows: "Application Control policy has blocked this file"</h3>
-            <p class="text-gray-400 text-sm">
-              Update uv by running <code class="text-cyan-400/80">uv self update</code> in your terminal, then restart Claude Desktop. Newer versions of uv include signed binaries that resolve this.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Privacy -->
+    <!-- Privacy (moved up from bottom) -->
     <section class="py-16 px-6 fade-in opacity-0 translate-y-4 transition-all duration-700">
       <div class="max-w-3xl mx-auto">
         <div class="bg-[#141414] border border-white/5 rounded-xl p-8">
@@ -367,79 +166,20 @@ const platforms = [
               <p class="text-gray-400">Your AI provider (Anthropic, OpenAI, etc.) will process the budget data you share in conversations — this is how AI assistants work. Review your provider's data policies.</p>
             </div>
           </div>
-          <p class="text-xs text-gray-500">For commercial Claude users: Your data won't be used for AI training.</p>
+          <p class="text-xs text-gray-500">For commercial Claude users: Your data won't be used for AI training. <a href="/docs" class="text-cyan-400 hover:underline">Learn more about provider tiers</a>.</p>
         </div>
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="border-t border-white/5 pt-16 pb-8 px-6">
-      <div class="max-w-5xl mx-auto">
-        <div class="mb-10">
-          <h4 class="text-lg font-semibold mb-2">
-            <span class="text-cyan-400">YNAB</span> <span class="text-gray-400 font-normal">MCP Server</span>
-          </h4>
-          <p class="text-sm text-gray-500 max-w-md mb-5">
-            Give your AI assistant access to your YNAB budget. Because budgeting is hard enough without manually pulling reports.
-          </p>
-          <div class="flex items-center gap-5">
-            <a href="https://github.com/pragprogrammer/mcp-ynab" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-100 transition-colors">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-              GitHub Repository
-            </a>
-            <a href="https://pypi.org/project/mcp-ynab/" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-100 transition-colors">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.042 0l-4.018 1.543v4.087l-3.982 1.53v12.848l3.982-1.53 4.018 1.53 4.018-1.53 3.982 1.53V7.16l-3.982-1.53V1.543L12.042 0zm-.024 1.8l2.994 1.15v3.39L12.018 7.49 9.024 6.34v-3.39L12.018 1.8zm-3.994 3.3l2.994 1.15v10.4l-2.994-1.15V5.1zm7.988 1.7l2.994 1.15v10.4l-2.994-1.15V6.8zm-3.994 1.55l2.994 1.15v10.4l-2.994-1.15V8.35z"/></svg>
-              PyPI Package
-            </a>
-            <a href="https://github.com/sponsors/pragprogrammer" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-400 hover:text-pink-400 transition-colors" title="YNAB costs $14.99/mo and this MCP server isn't going to pay for itself">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-              Sponsor My YNAB Subscription
-            </a>
-          </div>
-        </div>
-        <div class="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p class="text-xs text-gray-500">Open Source · AGPL-3.0 · Not affiliated with YNAB</p>
-
-        </div>
+    <!-- CTA -->
+    <section class="py-20 px-6">
+      <div class="max-w-2xl mx-auto text-center">
+        <h2 class="text-3xl font-bold mb-4">Ready to get started?</h2>
+        <p class="text-gray-400 mb-8">Three steps. No server to host. No account to create.</p>
+        <a href="/setup" class="inline-block px-8 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-lg transition-colors">
+          Set up mcp-ynab
+        </a>
       </div>
-    </footer>
+    </section>
   </main>
 </Layout>
-
-<script>
-  // Tab switching
-  document.querySelectorAll('[data-tab]').forEach((tab) => {
-    tab.addEventListener('click', () => {
-      const index = tab.getAttribute('data-tab');
-
-      document.querySelectorAll('[data-tab]').forEach((t) => {
-        t.classList.remove('text-cyan-400', 'border-b-2', 'border-cyan-400');
-        t.classList.add('text-gray-500');
-      });
-      tab.classList.add('text-cyan-400', 'border-b-2', 'border-cyan-400');
-      tab.classList.remove('text-gray-500');
-
-      document.querySelectorAll('[data-panel]').forEach((p) => {
-        p.classList.toggle('hidden', p.getAttribute('data-panel') !== index);
-      });
-    });
-  });
-
-  // Copy to clipboard
-  document.querySelectorAll('.copy-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const code = btn.getAttribute('data-code') || '';
-      navigator.clipboard.writeText(code);
-
-      const copyIcon = btn.querySelector('.copy-icon') as HTMLElement;
-      const checkIcon = btn.querySelector('.check-icon') as HTMLElement;
-      copyIcon.classList.add('hidden');
-      checkIcon.classList.remove('hidden');
-
-      setTimeout(() => {
-        copyIcon.classList.remove('hidden');
-        checkIcon.classList.add('hidden');
-      }, 2000);
-    });
-  });
-</script>

@@ -16,7 +16,7 @@ An MCP server that connects AI assistants to your [YNAB](https://www.ynab.com/) 
 ## Quick Start
 
 ```
-uvx mcp-ynab
+uv tool run mcp-ynab
 ```
 
 Requires a [YNAB personal access token](https://app.ynab.com/settings/developer) set as `YNAB_API_KEY`.
@@ -31,8 +31,8 @@ Add to your config file:
 {
   "mcpServers": {
     "ynab": {
-      "command": "uvx",
-      "args": ["mcp-ynab"],
+      "command": "uv",
+      "args": ["tool", "run", "mcp-ynab"],
       "env": {
         "YNAB_API_KEY": "your-api-key-here"
       }
@@ -44,7 +44,7 @@ Add to your config file:
 ### Claude Code
 
 ```bash
-claude mcp add-json ynab --scope user '{"type":"stdio","command":"uvx","args":["mcp-ynab"],"env":{"YNAB_API_KEY":"your-api-key-here"}}'
+claude mcp add-json ynab --scope user '{"type":"stdio","command":"uv","args":["tool","run","mcp-ynab"],"env":{"YNAB_API_KEY":"your-api-key-here"}}'
 ```
 
 See [mcp-ynab.com](https://mcp-ynab.com) for config file locations and troubleshooting.

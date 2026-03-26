@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 import Analytics from '@vercel/analytics/astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
 
 export interface Props {
   title?: string;
@@ -49,18 +51,22 @@ const ogImage = new URL('/og-image.png', Astro.site ?? Astro.url);
     <script is:inline>document.getElementById('jetbrains-font').media = 'all';</script>
   </head>
   <body class="min-h-screen bg-[#0a0a0a] text-gray-100 antialiased">
+    <Nav />
     <slot />
+    <Footer />
     <Analytics />
 
     <script>
-      // Smooth scroll for anchor links
+      // Smooth scroll for same-page anchor links
       document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
         anchor.addEventListener('click', (e) => {
-          e.preventDefault();
           const href = (anchor as HTMLAnchorElement).getAttribute('href');
-          if (href) {
+          if (href && href.length > 1) {
             const target = document.querySelector(href);
-            target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (target) {
+              e.preventDefault();
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
           }
         });
       });

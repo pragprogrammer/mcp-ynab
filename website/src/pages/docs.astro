@@ -1,0 +1,87 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Docs — YNAB MCP Server" description="Troubleshooting, config file locations, and reference docs for mcp-ynab.">
+  <main class="pt-24 pb-20 px-6">
+    <div class="max-w-3xl mx-auto">
+      <h1 class="text-4xl font-bold text-center mb-3">Documentation</h1>
+      <p class="text-gray-400 text-center mb-16">Troubleshooting, reference, and things worth knowing.</p>
+
+      <!-- Troubleshooting -->
+      <section class="mb-16">
+        <h2 class="text-2xl font-bold mb-6">Troubleshooting</h2>
+        <div class="space-y-4">
+          <div class="bg-[#141414] border border-white/5 rounded-xl p-6 fade-in opacity-0 translate-y-4 transition-all duration-700">
+            <h3 class="text-sm font-semibold text-amber-400 mb-2">macOS: "No such file or directory" or server fails to start</h3>
+            <p class="text-gray-400 text-sm mb-2">
+              Claude Desktop and other MCP clients on macOS don't inherit your shell's PATH. Even if <code class="text-cyan-400/80">uv</code> works in your terminal, the app can't find it.
+            </p>
+            <p class="text-gray-400 text-sm">
+              Run <code class="text-cyan-400/80">which uv</code> in your terminal, then use the full path as the command in your config — e.g., <code class="text-cyan-400/80">/Users/you/.local/bin/uv</code>.
+            </p>
+          </div>
+          <div class="bg-[#141414] border border-white/5 rounded-xl p-6 fade-in opacity-0 translate-y-4 transition-all duration-700">
+            <h3 class="text-sm font-semibold text-amber-400 mb-2">Windows: MCP server not loading / config not found</h3>
+            <p class="text-gray-400 text-sm mb-2">
+              Claude Desktop on Windows uses MSIX packaging, which redirects the config file to a different path than what the "Edit Config" button shows. This is a <a href="https://github.com/anthropics/claude-code/issues/26073" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">known bug</a>.
+            </p>
+            <p class="text-gray-400 text-sm">
+              Edit the config file at this path instead:<br />
+              <code class="text-cyan-400/80 text-xs break-all">%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json</code>
+            </p>
+          </div>
+          <div class="bg-[#141414] border border-white/5 rounded-xl p-6 fade-in opacity-0 translate-y-4 transition-all duration-700">
+            <h3 class="text-sm font-semibold text-amber-400 mb-2">Windows: "Application Control policy has blocked this file"</h3>
+            <p class="text-gray-400 text-sm">
+              Update uv by running <code class="text-cyan-400/80">uv self update</code> in your terminal, then restart Claude Desktop. Newer versions of uv include signed binaries that resolve this.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI Provider Notes -->
+      <section class="mb-16">
+        <h2 class="text-2xl font-bold mb-6">AI Provider Notes</h2>
+        <div class="bg-[#141414] border border-white/5 rounded-xl p-6 fade-in opacity-0 translate-y-4 transition-all duration-700">
+          <p class="text-gray-300 text-sm mb-4">
+            Your experience with mcp-ynab depends on which AI provider and plan you use. The MCP server is the same for everyone — the difference is the model processing your requests.
+          </p>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-start gap-3">
+              <span class="text-cyan-400 mt-0.5 font-bold text-xs">PRO</span>
+              <p class="text-gray-400">Paid tiers (Claude Pro/Max, ChatGPT Plus/Pro) use more capable models with larger context windows. They handle complex multi-step tasks like bulk-categorizing 50+ transactions more reliably.</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-gray-500 mt-0.5 font-bold text-xs">FREE</span>
+              <p class="text-gray-400">Free tiers work but may hit rate limits, use smaller models, or struggle with large transaction volumes. Great for trying things out.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Resources -->
+      <section>
+        <h2 class="text-2xl font-bold mb-6">Resources</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <a href="https://github.com/pragprogrammer/mcp-ynab" target="_blank" rel="noopener" class="bg-[#141414] border border-white/5 rounded-xl p-5 hover:border-cyan-400/20 transition-colors fade-in opacity-0 translate-y-4 transition-all duration-700">
+            <h3 class="font-semibold mb-1 text-sm">GitHub Repository</h3>
+            <p class="text-xs text-gray-400">Source code, full tool documentation, and 30+ available tools.</p>
+          </a>
+          <a href="https://api.ynab.com/" target="_blank" rel="noopener" class="bg-[#141414] border border-white/5 rounded-xl p-5 hover:border-cyan-400/20 transition-colors fade-in opacity-0 translate-y-4 transition-all duration-700">
+            <h3 class="font-semibold mb-1 text-sm">YNAB API Docs</h3>
+            <p class="text-xs text-gray-400">Official YNAB API documentation for understanding the underlying data.</p>
+          </a>
+          <a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener" class="bg-[#141414] border border-white/5 rounded-xl p-5 hover:border-cyan-400/20 transition-colors fade-in opacity-0 translate-y-4 transition-all duration-700">
+            <h3 class="font-semibold mb-1 text-sm">MCP Protocol</h3>
+            <p class="text-xs text-gray-400">Learn about the Model Context Protocol that powers this integration.</p>
+          </a>
+          <a href="https://app.ynab.com/settings/developer" target="_blank" rel="noopener" class="bg-[#141414] border border-white/5 rounded-xl p-5 hover:border-cyan-400/20 transition-colors fade-in opacity-0 translate-y-4 transition-all duration-700">
+            <h3 class="font-semibold mb-1 text-sm">YNAB Developer Settings</h3>
+            <p class="text-xs text-gray-400">Create or manage your personal access tokens.</p>
+          </a>
+        </div>
+      </section>
+    </div>
+  </main>
+</Layout>
