@@ -504,6 +504,31 @@ async def update_category_budget(
     return json.dumps(cat.model_dump(by_alias=True, exclude=CATEGORY_LIST_EXCLUDE | {"hidden"}), indent=2)
 
 
+@mcp.tool()
+@handle_errors
+async def update_category_goal(
+    category_id: str, goal_target: float, budget_id: str, goal_type: str = "MF"
+) -> str:
+    """Set a recurring monthly goal/target for a category.
+
+    Once set, YNAB's Auto-Assign will fill this amount each month automatically.
+
+    Args:
+        category_id: The category ID
+        goal_target: Target amount in dollars (e.g. 400.00)
+        budget_id: The budget ID (use list_budgets to find available IDs)
+        goal_type: Goal type — MF (Monthly Funding, default), NEED (monthly spending target),
+                   TB (target balance), TBD (target balance by date), DEBT (debt payoff)
+    """
+    cat = await cache.update_category_goal(
+        category_id, goal_type, int(goal_target * 1000), budget_id
+    )
+    return json.dumps(
+        cat.model_dump(by_alias=True, include={"id", "name", "goal_type", "goal_target", "goal_percentage_complete"}),
+        indent=2,
+    )
+
+
 # ── Payee Tools ──────────────────────────────────────────────
 
 

@@ -361,6 +361,13 @@ class CacheService:
         await self.delta.invalidate_knowledge(budget_id, "months")
         return cat
 
+    async def update_category_goal(
+        self, category_id: str, goal_type: str, goal_target: int, budget_id: str
+    ) -> Category:
+        cat = await self.client.update_category_goal(category_id, goal_type, goal_target, budget_id)
+        await self.delta.invalidate_knowledge(budget_id, "categories")
+        return cat
+
     # Payees (delta synced)
 
     async def get_payees(self, budget_id: str) -> list[Payee]:

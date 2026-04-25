@@ -272,6 +272,15 @@ class YNABClient:
         )
         return Category.model_validate(data["data"]["category"])
 
+    async def update_category_goal(
+        self, category_id: str, goal_type: str, goal_target: int, budget_id: str
+    ) -> Category:
+        data = await self._patch(
+            f"/budgets/{budget_id}/categories/{category_id}",
+            json={"category": {"goal_type": goal_type, "goal_target": goal_target}},
+        )
+        return Category.model_validate(data["data"]["category"])
+
     # ── Payees ───────────────────────────────────────────────
 
     async def get_payees(
