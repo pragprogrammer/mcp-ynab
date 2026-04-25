@@ -361,6 +361,38 @@ class CacheService:
         await self.delta.invalidate_knowledge(budget_id, "months")
         return cat
 
+    async def auto_assign_monthly_targets(
+        self, month: str, budget_id: str
+    ) -> list[dict]:
+        from datetime import date
+
+        if month == "current":
+            today = date.today()
+            month = today.replace(day=1).strftime("%Y-%m-%d")
+
+        # Groups to skip — not real spending categories
+        SKIP_GROUPS = {"Internal Master Category", "Credit Card Payments", "Hidden Categories"}
+
+        groups = await self.get_categories(budget_id)
+        assigned = []
+        for group in groups:
+            if group.name in SKIP_GROUPS or group.hidden or group.deleted:
+                continue
+            for cat in group.categories:
+                if cat.hidden or cat.deleted or not cat.goal_target:
+                    continue
+                updated = await self.client.update_category_budget(
+                    month, cat.id, cat.goal_target, budget_id
+                )
+                assigned.append({
+                    "name": updated.name,
+                    "group": group.name,
+                    "budgeted": updated.budgeted / 1000,
+                })
+
+        await self.delta.invalidate_knowledge(budget_id, "months")
+        return assigned
+
     # Payees (delta synced)
 
     async def get_payees(self, budget_id: str) -> list[Payee]:

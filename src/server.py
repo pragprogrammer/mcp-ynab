@@ -504,6 +504,32 @@ async def update_category_budget(
     return json.dumps(cat.model_dump(by_alias=True, exclude=CATEGORY_LIST_EXCLUDE | {"hidden"}), indent=2)
 
 
+@mcp.tool()
+@handle_errors
+async def auto_assign_monthly_targets(budget_id: str, month: str = "current") -> str:
+    """Assign budgets to all categories based on their monthly goals/targets.
+
+    Mirrors YNAB's Auto-Assign → Monthly Targets button. For every category
+    that has a goal target set, assigns the goal amount as the budgeted value
+    for the given month. Skips hidden, deleted, and internal categories.
+
+    Args:
+        budget_id: The budget ID (use list_budgets to find available IDs)
+        month: Month in YYYY-MM-DD format (e.g. '2026-05-01') or 'current'. Defaults to current month.
+    """
+    assigned = await cache.auto_assign_monthly_targets(month, budget_id)
+    total = sum(a["budgeted"] for a in assigned)
+    return json.dumps(
+        {
+            "month": month,
+            "categories_assigned": len(assigned),
+            "total_budgeted": round(total, 2),
+            "assignments": assigned,
+        },
+        indent=2,
+    )
+
+
 # ── Payee Tools ──────────────────────────────────────────────
 
 
