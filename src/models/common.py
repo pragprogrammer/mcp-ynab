@@ -1,10 +1,23 @@
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, PlainSerializer
 
 
 class YNABBaseModel(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+
+def milliunits_to_dollars(v: int) -> float:
+    return round(v / 1000, 3)
+
+
+# Milliunits -> dollar float on JSON dump only. Python-mode dumps stay int so
+# dump/reload roundtrips don't lose precision (float would coerce back to int).
+Milliunit = Annotated[
+    int,
+    PlainSerializer(milliunits_to_dollars, return_type=float, when_used="json"),
+]
 
 
 class ClearedStatus(StrEnum):

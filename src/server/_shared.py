@@ -126,7 +126,9 @@ def serialize(model, *, exclude_fields: list[str] | None = None) -> str:
     `exclude_fields=[]` to return all fields, or a custom list to override.
     """
     exclude = _resolve_exclude(type(model), exclude_fields)
-    return json.dumps(model.model_dump(by_alias=True, exclude=exclude), indent=2)
+    return json.dumps(
+        model.model_dump(by_alias=True, mode="json", exclude=exclude), indent=2
+    )
 
 
 def serialize_list(models, *, exclude_fields: list[str] | None = None) -> str:
@@ -139,7 +141,7 @@ def serialize_list(models, *, exclude_fields: list[str] | None = None) -> str:
         return "[]"
     exclude = _resolve_exclude(type(models[0]), exclude_fields)
     return json.dumps(
-        [m.model_dump(by_alias=True, exclude=exclude) for m in models],
+        [m.model_dump(by_alias=True, mode="json", exclude=exclude) for m in models],
         indent=2,
     )
 

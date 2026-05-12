@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from src.models.common import YNABBaseModel
+from src.models.common import Milliunit, YNABBaseModel
 
 TRANSACTION_DEFAULT_EXCLUDE: set[str] = {
     "flag_name",
@@ -23,7 +23,7 @@ SUBTRANSACTION_DEFAULT_EXCLUDE: set[str] = {
 class Subtransaction(YNABBaseModel):
     id: str = Field()
     transaction_id: str = Field()
-    amount: int = Field(default=0)
+    amount: Milliunit = Field(default=0)
     memo: str | None = Field(default=None)
     payee_id: str | None = Field(default=None)
     payee_name: str | None = Field(default=None)
@@ -37,7 +37,7 @@ class Subtransaction(YNABBaseModel):
 class Transaction(YNABBaseModel):
     id: str = Field()
     date: str = Field()
-    amount: int = Field(default=0)
+    amount: Milliunit = Field(default=0)
     memo: str | None = Field(default=None)
     cleared: str = Field(default="uncleared")
     approved: bool = Field(default=False)
@@ -67,7 +67,7 @@ class HybridTransaction(YNABBaseModel):
     """
     id: str = Field()
     date: str = Field()
-    amount: int = Field(default=0)
+    amount: Milliunit = Field(default=0)
     memo: str | None = Field(default=None)
     cleared: str = Field(default="uncleared")
     approved: bool = Field(default=False)

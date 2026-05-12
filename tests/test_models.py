@@ -196,3 +196,44 @@ class TestUser:
         raw = u.model_dump()
         u2 = User.model_validate(raw)
         assert u2.id == "user-123"
+
+
+class TestMilliunit:
+    def test_amount_serializes_to_dollars_in_json_mode(self):
+        t = Transaction(id="t1", date="2026-03-15", amount=-50250)
+        result = t.model_dump(by_alias=True, mode="json")
+        assert result["amount"] == -50.25
+
+    def test_python_mode_dump_keeps_int(self):
+        t = Transaction(id="t1", date="2026-03-15", amount=-50250)
+        result = t.model_dump(by_alias=True)
+        assert result["amount"] == -50250
+
+    def test_attribute_access_returns_int(self):
+        t = Transaction(id="t1", date="2026-03-15", amount=-50250)
+        assert t.amount == -50250
+        assert isinstance(t.amount, int)
+
+    def test_optional_milliunit_none_passes_through(self):
+        a = Account(id="a1", name="Checking", type="checking", debt_original_balance=None)
+        result = a.model_dump(by_alias=True, mode="json")
+        assert result["debt_original_balance"] is None
+
+    def test_3_decimal_precision_preserves_non_usd_currencies(self):
+        # KWD has 3 decimal digits; e.g. 1.234 KWD = 1234 milliunits
+        t = Transaction(id="t1", date="2026-03-15", amount=1234)
+        result = t.model_dump(by_alias=True, mode="json")
+        assert result["amount"] == 1.234
+
+    def test_python_mode_roundtrip_preserves_milliunits(self):
+        m = MonthSummary(month="2026-03-01", income=5000000)
+        raw = m.model_dump()
+        m2 = MonthSummary.model_validate(raw)
+        assert m2.income == 5000000
+
+    def test_nested_categories_convert_in_json_mode(self):
+        cat = Category(id="c1", category_group_id="g1", name="Food", budgeted=500000)
+        m = MonthDetail(month="2026-03-01", income=5000000, categories=[cat])
+        result = m.model_dump(by_alias=True, mode="json")
+        assert result["income"] == 5000.0
+        assert result["categories"][0]["budgeted"] == 500.0

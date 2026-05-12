@@ -1,6 +1,7 @@
 import json
 from datetime import date
 
+from src.models.common import milliunits_to_dollars
 from src.server import _shared
 
 MONEY_FLOW_EXCLUDE_GROUPS = {"Internal Master Category", "Credit Card Payments"}
@@ -38,21 +39,19 @@ async def get_money_flow(plan_id: str, month: str = "current") -> str:
     # Build nodes: index 0 is Income, then one per category group
     nodes = [{"name": "Income"}]
     links = []
-    total_spent = 0.0
+    total_spent_mu = 0
 
-    for group_name, activity_milliunits in sorted(group_activity.items()):
-        value = abs(activity_milliunits) / 1000.0
-        total_spent += value
+    for group_name, activity_mu in sorted(group_activity.items()):
+        abs_mu = abs(activity_mu)
+        total_spent_mu += abs_mu
         target_index = len(nodes)
         nodes.append({"name": group_name})
-        links.append({"source": 0, "target": target_index, "value": round(value, 2)})
-
-    total_income = abs(month_detail.income) / 1000.0
+        links.append({"source": 0, "target": target_index, "value": milliunits_to_dollars(abs_mu)})
 
     result = {
         "month": month,
-        "total_income": round(total_income, 2),
-        "total_spent": round(total_spent, 2),
+        "total_income": milliunits_to_dollars(abs(month_detail.income)),
+        "total_spent": milliunits_to_dollars(total_spent_mu),
         "nodes": nodes,
         "links": links,
     }
@@ -79,20 +78,20 @@ async def get_spending_by_category(plan_id: str, month: str = "current") -> str:
 
     # Collect categories with non-zero activity, excluding internal groups
     categories = []
-    total_spent = 0
+    total_spent_mu = 0
     for cat in month_detail.categories:
         group_name = cat.category_group_name or "Uncategorized"
         if group_name in MONEY_FLOW_EXCLUDE_GROUPS:
             continue
         if cat.activity == 0:
             continue
-        spent = abs(cat.activity)
-        total_spent += spent
+        spent_mu = abs(cat.activity)
+        total_spent_mu += spent_mu
         categories.append({
             "group": group_name,
             "name": cat.name,
             "budgeted_mu": cat.budgeted,
-            "spent_mu": spent,
+            "spent_mu": spent_mu,
             "balance_mu": cat.balance,
         })
 
@@ -100,19 +99,19 @@ async def get_spending_by_category(plan_id: str, month: str = "current") -> str:
     categories.sort(key=lambda c: c["spent_mu"], reverse=True)
     result_cats = []
     for c in categories:
-        pct = round(c["spent_mu"] / total_spent * 100, 1) if total_spent > 0 else 0.0
+        pct = round(c["spent_mu"] / total_spent_mu * 100, 1) if total_spent_mu > 0 else 0.0
         result_cats.append({
             "group": c["group"],
             "name": c["name"],
-            "budgeted": round(c["budgeted_mu"] / 1000, 2),
-            "spent": round(c["spent_mu"] / 1000, 2),
-            "balance": round(c["balance_mu"] / 1000, 2),
+            "budgeted": milliunits_to_dollars(c["budgeted_mu"]),
+            "spent": milliunits_to_dollars(c["spent_mu"]),
+            "balance": milliunits_to_dollars(c["balance_mu"]),
             "pct_of_total": pct,
         })
 
     result = {
         "month": month,
-        "total_spent": round(total_spent / 1000, 2),
+        "total_spent": milliunits_to_dollars(total_spent_mu),
         "categories": result_cats,
     }
     return json.dumps(result, indent=2)

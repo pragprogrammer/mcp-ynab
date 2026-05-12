@@ -181,7 +181,7 @@ class TestListTransactions:
         mock_cache.get_transactions = AsyncMock(return_value=[_make_transaction()])
         result = json.loads(await list_transactions(plan_id="bud-1"))
         assert len(result) == 1
-        assert result[0]["amount"] == -50250
+        assert result[0]["amount"] == -50.25
 
     @pytest.mark.asyncio
     async def test_passes_filters(self, mock_cache):
@@ -495,7 +495,7 @@ class TestListMonths:
         mock_cache.get_months = AsyncMock(return_value=[_make_month_summary()])
         result = json.loads(await list_months(plan_id="bud-1"))
         assert len(result) == 1
-        assert result[0]["income"] == 5000000
+        assert result[0]["income"] == 5000.0
 
 
 class TestGetMonth:
@@ -506,7 +506,7 @@ class TestGetMonth:
         mock_cache.get_month = AsyncMock(return_value=_make_month_detail())
         result = json.loads(await get_month(month="2026-03-01", plan_id="bud-1"))
         assert "categories" in result
-        assert result["income"] == 5000000
+        assert result["income"] == 5000.0
 
     @pytest.mark.asyncio
     async def test_nested_categories_apply_default_excludes(self, mock_cache):
@@ -659,7 +659,7 @@ class TestSearchTransactions:
         ))
         assert len(result) == 2
         amounts = {r["amount"] for r in result}
-        assert amounts == {-10000, -50000}
+        assert amounts == {-10.0, -50.0}
 
     @pytest.mark.asyncio
     async def test_combined_filters(self, mock_cache):
@@ -674,7 +674,7 @@ class TestSearchTransactions:
             plan_id="bud-1", query="cafe", amount_min=-10.0
         ))
         assert len(result) == 1
-        assert result[0]["amount"] == -5000
+        assert result[0]["amount"] == -5.0
 
     @pytest.mark.asyncio
     async def test_no_results(self, mock_cache):
@@ -699,7 +699,7 @@ class TestSearchTransactions:
             plan_id="bud-1", query="A", amount_min=10.0, amount_max=100.0
         ))
         assert len(result) == 1
-        assert result[0]["amount"] == -50000
+        assert result[0]["amount"] == -50.0
 
     @pytest.mark.asyncio
     async def test_amount_range_signed_when_negative_bound(self, mock_cache):
@@ -713,7 +713,7 @@ class TestSearchTransactions:
             plan_id="bud-1", query="A", amount_min=-100.0, amount_max=-10.0
         ))
         assert len(result) == 1
-        assert result[0]["amount"] == -50000
+        assert result[0]["amount"] == -50.0
 
     @pytest.mark.asyncio
     async def test_amount_range_positive_bounds_skip_outflows_outside_abs_range(self, mock_cache):

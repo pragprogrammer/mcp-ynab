@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from src.models.common import YNABBaseModel
+from src.models.common import Milliunit, YNABBaseModel
 
 MONEY_MOVEMENT_DEFAULT_EXCLUDE: set[str] = set()
 
@@ -24,4 +24,4 @@ class MoneyMovement(YNABBaseModel):
     performed_by_user_id: str | None = Field(default=None)
     from_category_id: str | None = Field(default=None)
     to_category_id: str | None = Field(default=None)
-    amount: int = Field(default=0)
+    amount: Milliunit = Field(default=0)

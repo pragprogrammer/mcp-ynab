@@ -2,6 +2,8 @@
 
 Every YNAB MCP tool that returns a model accepts an optional `exclude_fields` parameter.
 
+> **Money fields** (e.g. `amount`, `balance`, `budgeted`, `activity`, `income`, `goal_target`) are returned as **dollar floats** with 3-decimal precision (e.g. `-50.25`, `1234.567`). YNAB's underlying milliunit integer (1000 = $1.00) is preserved internally - the conversion happens only on serialization. Tool inputs that accept money still take dollar floats.
+
 ## How `exclude_fields` works
 
 | Value | Behavior |
