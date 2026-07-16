@@ -57,13 +57,20 @@ See [mcp-ynab.com](https://mcp-ynab.com) for config file locations and troublesh
 | **Plans** | `list_plans`, `get_plan`, `get_plan_settings` |
 | **Accounts** | `list_accounts`, `get_account`, `create_account` |
 | **Categories** | `list_categories`, `get_category`, `create_category`, `update_category`, `create_category_group`, `update_category_group`, `get_category_for_month`, `update_category_for_month` |
-| **Payees** | `list_payees`, `get_payee`, `update_payee` |
+| **Payees** | `list_payees`, `get_payee`, `create_payee`, `update_payee` |
 | **Payee Locations** | `list_payee_locations`, `get_payee_location`, `get_payee_locations_by_payee` |
 | **Months** | `list_months`, `get_month` |
 | **Money Movements** | `list_money_movements`, `get_money_movements_for_month`, `list_money_movement_groups`, `get_money_movement_groups_for_month` |
 | **Transactions** | `list_transactions`, `get_transaction`, `get_transactions_by_account`, `get_transactions_by_category`, `get_transactions_by_month`, `get_transactions_by_payee`, `search_transactions`, `create_transaction`, `create_transactions`, `update_transaction`, `update_transactions`, `delete_transaction`, `import_transactions` |
 | **Scheduled** | `list_scheduled_transactions`, `get_scheduled_transaction`, `create_scheduled_transaction`, `update_scheduled_transaction`, `delete_scheduled_transaction` |
 | **Analytics** | `get_money_flow`, `get_spending_by_category` |
+
+### Read-only mode
+
+Set `YNAB_READ_ONLY=true` in the server's `env` to skip registering every
+mutating tool (create/update/delete/import). Clients only ever see the read
+and analytics tools, so an assistant can analyze your budget without being
+able to change it.
 
 ### Field selection
 
