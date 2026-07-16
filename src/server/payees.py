@@ -57,7 +57,7 @@ async def create_payee(
     return serialize(payee, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def update_payee(
     plan_id: str,
