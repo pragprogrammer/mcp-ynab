@@ -324,7 +324,7 @@ class YNABClient:
         self, category_group_id: str, category_group: dict, plan_id: str
     ) -> CategoryGroup:
         data = await self._patch(
-            f"/plans/{plan_id}/categories/groups/{category_group_id}",
+            f"/plans/{plan_id}/category_groups/{category_group_id}",
             json={"category_group": category_group},
         )
         return CategoryGroup.model_validate(data["data"]["category_group"])
