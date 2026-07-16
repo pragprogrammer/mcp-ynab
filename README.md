@@ -57,7 +57,7 @@ See [mcp-ynab.com](https://mcp-ynab.com) for config file locations and troublesh
 | **Plans** | `list_plans`, `get_plan`, `get_plan_settings` |
 | **Accounts** | `list_accounts`, `get_account`, `create_account` |
 | **Categories** | `list_categories`, `get_category`, `create_category`, `update_category`, `create_category_group`, `update_category_group`, `get_category_for_month`, `update_category_for_month` |
-| **Payees** | `list_payees`, `get_payee`, `update_payee` |
+| **Payees** | `list_payees`, `get_payee`, `create_payee`, `update_payee` |
 | **Payee Locations** | `list_payee_locations`, `get_payee_location`, `get_payee_locations_by_payee` |
 | **Months** | `list_months`, `get_month` |
 | **Money Movements** | `list_money_movements`, `get_money_movements_for_month`, `list_money_movement_groups`, `get_money_movement_groups_for_month` |
