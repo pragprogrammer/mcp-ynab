@@ -65,6 +65,13 @@ See [mcp-ynab.com](https://mcp-ynab.com) for config file locations and troublesh
 | **Scheduled** | `list_scheduled_transactions`, `get_scheduled_transaction`, `create_scheduled_transaction`, `update_scheduled_transaction`, `delete_scheduled_transaction` |
 | **Analytics** | `get_money_flow`, `get_spending_by_category` |
 
+### Read-only mode
+
+Set `YNAB_READ_ONLY=true` in the server's `env` to skip registering every
+mutating tool (create/update/delete/import). Clients only ever see the read
+and analytics tools, so an assistant can analyze your budget without being
+able to change it.
+
 ### Field selection
 
 Every tool that returns a model accepts an optional `exclude_fields` list. By

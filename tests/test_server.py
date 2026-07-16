@@ -833,3 +833,47 @@ class TestGetUser:
         mock_cache.get_user = AsyncMock(return_value=User(id="user-123"))
         result = json.loads(await get_user())
         assert result["id"] == "user-123"
+
+
+# ── Read-Only Mode ────────────────────────────────────────────
+
+
+class TestReadOnlyMode:
+    def test_write_tool_skips_registration_when_read_only(self):
+        from src.server import _shared
+
+        async def dummy_write_tool() -> str:
+            return ""
+
+        with patch.object(_shared.settings, "read_only", True):
+            decorated = _shared.write_tool()(dummy_write_tool)
+
+        assert decorated is dummy_write_tool
+
+    @pytest.mark.asyncio
+    async def test_write_tool_registers_when_not_read_only(self):
+        from src.server import _shared
+
+        async def dummy_registered_tool() -> str:
+            return ""
+
+        with patch.object(_shared.settings, "read_only", False):
+            _shared.write_tool()(dummy_registered_tool)
+
+        names = [t.name for t in await _shared.mcp.list_tools()]
+        assert "dummy_registered_tool" in names
+
+    @pytest.mark.asyncio
+    async def test_mutating_tools_use_write_tool(self):
+        """Every create/update/delete/import tool must go through write_tool()."""
+        import re
+        from pathlib import Path
+
+        server_dir = Path(__file__).parent.parent / "src" / "server"
+        pattern = re.compile(
+            r"@_shared\.mcp\.tool\(\)\n@_shared\.handle_errors\n"
+            r"async def (create_|update_|delete_|import_)\w+"
+        )
+        for module in server_dir.glob("*.py"):
+            leaks = pattern.findall(module.read_text())
+            assert not leaks, f"{module.name} registers mutating tools unconditionally: {leaks}"
