@@ -484,6 +484,19 @@ class TestListPayees:
         assert result[0]["name"] == "Amazon"
 
 
+class TestCreatePayee:
+    @pytest.mark.asyncio
+    async def test_creates_payee(self, mock_cache):
+        from src.server import create_payee
+
+        mock_cache.create_payee = AsyncMock(return_value=_make_payee(name="New Store"))
+        result = json.loads(await create_payee(plan_id="bud-1", name="New Store"))
+        assert result["name"] == "New Store"
+
+        call_args = mock_cache.create_payee.call_args
+        assert call_args[0][0] == {"name": "New Store"}
+
+
 # ── Month Tools ───────────────────────────────────────────────
 
 

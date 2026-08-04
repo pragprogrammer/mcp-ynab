@@ -364,6 +364,13 @@ class YNABClient:
         knowledge = data["data"]["server_knowledge"]
         return payees, knowledge
 
+    async def create_payee(self, payee: dict, plan_id: str) -> Payee:
+        data = await self._post(
+            f"/plans/{plan_id}/payees",
+            json={"payee": payee},
+        )
+        return Payee.model_validate(data["data"]["payee"])
+
     async def get_payee(self, payee_id: str, plan_id: str) -> Payee:
         data = await self._get(f"/plans/{plan_id}/payees/{payee_id}")
         return Payee.model_validate(data["data"]["payee"])

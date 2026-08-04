@@ -554,6 +554,11 @@ class CacheService:
         await self._set_cached_model(cache_key, payee, self.settings.ttl_single_entity)
         return payee
 
+    async def create_payee(self, payee: dict, plan_id: str) -> Payee:
+        p = await self.client.create_payee(payee, plan_id)
+        await self.delta.invalidate_knowledge(plan_id, ENDPOINT_PAYEES)
+        return p
+
     async def update_payee(self, payee_id: str, payee: dict, plan_id: str) -> Payee:
         p = await self.client.update_payee(payee_id, payee, plan_id)
         await self.delta.invalidate_knowledge(plan_id, ENDPOINT_PAYEES)
