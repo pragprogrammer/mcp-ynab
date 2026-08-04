@@ -17,8 +17,22 @@ jobs:
         env:
           YNAB_API_KEY: test-dummy-key
 
+  # Fresh resolution from the released tag. The `test` job above installs from
+  # uv.lock, which is exactly the check that let 1.0.3 publish broken (see #21).
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python scripts/smoke_test.py
+
   publish:
-    needs: test
+    needs: [test, smoke]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
