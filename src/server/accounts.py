@@ -19,7 +19,7 @@ async def list_accounts(
     return serialize_list(accounts, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def create_account(
     plan_id: str,

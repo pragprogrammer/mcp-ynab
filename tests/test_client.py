@@ -270,6 +270,22 @@ class TestGetPayees:
         assert payees[0].name == "Amazon"
 
 
+class TestCreatePayee:
+    @pytest.mark.asyncio
+    async def test_creates_payee(self, client):
+        data = {"data": {"payee": {"id": "p1", "name": "New Store"}, "server_knowledge": 4}}
+        client._client = AsyncMock()
+        client._client.post = AsyncMock(return_value=_mock_response(data, status_code=201))
+
+        result = await client.create_payee({"name": "New Store"}, "b1")
+        assert result.id == "p1"
+        assert result.name == "New Store"
+
+        post_call = client._client.post.call_args
+        assert post_call[0][0] == "/plans/b1/payees"
+        assert post_call[1]["json"] == {"payee": {"name": "New Store"}}
+
+
 # ── Months ────────────────────────────────────────────────────
 
 
@@ -347,6 +363,18 @@ class TestURLConstruction:
         await client.get_transactions_by_category("c1", "b1")
         url = client._client.get.call_args[0][0]
         assert url == "/plans/b1/categories/c1/transactions"
+
+    @pytest.mark.asyncio
+    async def test_update_category_group_url(self, client):
+        data = {"data": {"category_group": {
+            "id": "g1", "name": "Bills", "hidden": False, "deleted": False, "categories": [],
+        }}}
+        client._client = AsyncMock()
+        client._client.patch = AsyncMock(return_value=_mock_response(data))
+
+        await client.update_category_group("g1", {"name": "Bills"}, "b1")
+        url = client._client.patch.call_args[0][0]
+        assert url == "/plans/b1/category_groups/g1"
 
     @pytest.mark.asyncio
     async def test_month_category_url(self, client):

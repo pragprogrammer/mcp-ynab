@@ -324,7 +324,7 @@ class YNABClient:
         self, category_group_id: str, category_group: dict, plan_id: str
     ) -> CategoryGroup:
         data = await self._patch(
-            f"/plans/{plan_id}/categories/groups/{category_group_id}",
+            f"/plans/{plan_id}/category_groups/{category_group_id}",
             json={"category_group": category_group},
         )
         return CategoryGroup.model_validate(data["data"]["category_group"])
@@ -363,6 +363,13 @@ class YNABClient:
         payees = [Payee.model_validate(p) for p in data["data"]["payees"]]
         knowledge = data["data"]["server_knowledge"]
         return payees, knowledge
+
+    async def create_payee(self, payee: dict, plan_id: str) -> Payee:
+        data = await self._post(
+            f"/plans/{plan_id}/payees",
+            json={"payee": payee},
+        )
+        return Payee.model_validate(data["data"]["payee"])
 
     async def get_payee(self, payee_id: str, plan_id: str) -> Payee:
         data = await self._get(f"/plans/{plan_id}/payees/{payee_id}")

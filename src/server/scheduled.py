@@ -39,7 +39,7 @@ async def get_scheduled_transaction(
     return serialize(txn, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def create_scheduled_transaction(
     plan_id: str,
@@ -99,7 +99,7 @@ async def create_scheduled_transaction(
     return serialize(txn, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def update_scheduled_transaction(
     plan_id: str,
@@ -163,7 +163,7 @@ async def update_scheduled_transaction(
     return serialize(txn, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def delete_scheduled_transaction(
     scheduled_transaction_id: str,

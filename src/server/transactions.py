@@ -215,7 +215,7 @@ async def search_transactions(
     return serialize_list(matches, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def create_transaction(
     plan_id: str,
@@ -281,7 +281,7 @@ async def create_transaction(
     return serialize(txn, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def create_transactions(
     plan_id: str,
@@ -336,7 +336,7 @@ async def create_transactions(
     return serialize_list(txns, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def update_transaction(
     plan_id: str,
@@ -408,7 +408,7 @@ async def update_transaction(
     return serialize(txn, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def delete_transaction(
     transaction_id: str,
@@ -428,7 +428,7 @@ async def delete_transaction(
     return serialize(txn, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def import_transactions(plan_id: str) -> str:
     """Import available transactions on all linked accounts for the given plan.
@@ -444,7 +444,7 @@ async def import_transactions(plan_id: str) -> str:
     return json.dumps({"transaction_ids": transaction_ids}, indent=2)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
 @_shared.handle_errors
 async def update_transactions(
     plan_id: str,

@@ -37,7 +37,27 @@ async def get_payee(
     return serialize(payee, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.write_tool()
+@_shared.handle_errors
+async def create_payee(
+    plan_id: str,
+    name: str,
+    exclude_fields: list[str] | None = None,
+) -> str:
+    """Create a new payee.
+
+    Args:
+        plan_id: The plan ID (use list_plans to find available IDs)
+        name: The name of the new payee (max 500 characters)
+        exclude_fields: Optional list of field names to exclude from the response.
+            If omitted, the model's default exclude list is used (see FIELDS.md).
+            Pass [] to return all fields. Pass a custom list to override the default.
+    """
+    payee = await _shared.cache.create_payee({"name": name}, plan_id)
+    return serialize(payee, exclude_fields=exclude_fields)
+
+
+@_shared.write_tool()
 @_shared.handle_errors
 async def update_payee(
     plan_id: str,
