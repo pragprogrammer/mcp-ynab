@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     )
 
     ynab_api_key: str = Field(alias="YNAB_API_KEY")
+    read_only: bool = Field(default=False, alias="YNAB_READ_ONLY")
     cache_db_path: str = Field(default_factory=_default_db_path)
     http_timeout: float = 30.0
 

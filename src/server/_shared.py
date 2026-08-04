@@ -84,6 +84,17 @@ def dollars_to_milliunits(amount: float) -> int:
     return round(amount * 1000)
 
 
+def write_tool():
+    """Register a tool unless the server is in read-only mode.
+
+    Set YNAB_READ_ONLY=true to skip registering every mutating tool, so
+    clients only ever see the read tools.
+    """
+    if settings.read_only:
+        return lambda func: func
+    return mcp.tool()
+
+
 # Nested default excludes: when a parent model contains a list of nested models,
 # the nested model's default excludes need to be applied explicitly because
 # Pydantic's model_dump(exclude=set) only handles top-level fields.
