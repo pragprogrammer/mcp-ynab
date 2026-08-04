@@ -15,6 +15,7 @@ from src.server.categories import (
     list_categories, get_category, create_category, update_category,
     create_category_group, update_category_group,
     get_category_for_month, update_category_for_month,
+    auto_assign_monthly_targets,
 )
 from src.server.payees import list_payees, get_payee, update_payee
 from src.server.payee_locations import (
@@ -44,6 +45,7 @@ __all__ = [
     "list_categories", "get_category", "create_category", "update_category",
     "create_category_group", "update_category_group",
     "get_category_for_month", "update_category_for_month",
+    "auto_assign_monthly_targets",
     "list_payees", "get_payee", "update_payee",
     "list_payee_locations", "get_payee_location", "get_payee_locations_by_payee",
     "list_money_movements", "get_money_movements_for_month",
