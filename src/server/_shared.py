@@ -3,7 +3,7 @@ import sys
 from functools import wraps
 
 import httpx
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from src.cache.service import CacheService
 from src.config import Settings
@@ -48,7 +48,7 @@ except Exception as e:
     print(f"ERROR: {e}", file=sys.stderr)
     sys.exit(1)
 
-mcp = FastMCP("ynab")
+mcp = MCPServer("ynab")
 client = YNABClient(settings.ynab_api_key, timeout=settings.http_timeout)
 cache = CacheService(client, settings)
 

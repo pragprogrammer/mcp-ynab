@@ -1,6 +1,6 @@
 [project]
 name = "mcp-ynab"
-version = "1.0.3"
+version = "1.1.0"
 description = "MCP server that connects AI assistants to your YNAB budget"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -14,11 +14,16 @@ classifiers = [
     "Topic :: Office/Business :: Financial",
 ]
 dependencies = [
-    "httpx>=0.28.1",
-    "mcp[cli]>=1.26.0",
-    "pydantic>=2.11.3",
-    "pydantic-settings>=2.9.1",
-    "sqlalchemy[asyncio]>=2.0.41",
+    # Upper bounds are deliberate: an unbounded mcp[cli]>=1.26.0 broke every fresh
+    # install when the SDK shipped 2.0.0 and removed mcp.server.fastmcp (see #21).
+    # aiosqlite is intentionally left unbounded; it is never imported directly and
+    # SQLAlchemy constrains it. Lifting a cap needs a canary/smoke run, not a guess.
+    "httpx>=0.28.1,<1.0",
+    "mcp[cli]>=2.0.0,<3.0.0",
+    # Floor tracks mcp 2.x, which itself requires pydantic>=2.12.0.
+    "pydantic>=2.12.0,<3.0.0",
+    "pydantic-settings>=2.9.1,<3.0.0",
+    "sqlalchemy[asyncio]>=2.0.41,<3.0.0",
     "aiosqlite>=0.21.0",
 ]
 
@@ -37,6 +42,9 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
+# TODO: this installs a top-level `src` package into site-packages, which collides
+# with any other distribution doing the same. Rename to `mcp_ynab` (breaking import
+# change, needs its own major/minor release, not a fix release).
 packages = ["src"]
 
 [build-system]
