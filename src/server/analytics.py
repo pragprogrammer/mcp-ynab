@@ -3,8 +3,17 @@ from datetime import date
 
 from src.models.common import milliunits_to_dollars
 from src.server import _shared
+from src.server.internal_categories import InternalCategoryResolver
 
-MONEY_FLOW_EXCLUDE_GROUPS = {"Internal Master Category", "Credit Card Payments"}
+
+async def _internal_resolver(plan_id: str) -> InternalCategoryResolver:
+    """Resolve the category -> group.internal map for a plan.
+
+    One extra delta-synced (cached) call to GET /categories; the month payload
+    does not carry the group's flag.
+    """
+    groups = await _shared.cache.get_categories(plan_id)
+    return InternalCategoryResolver(groups)
 
 
 @_shared.mcp.tool()
@@ -24,14 +33,16 @@ async def get_money_flow(plan_id: str, month: str = "current") -> str:
 
     # Fetch month detail (has categories with activity and income total)
     month_detail = await _shared.cache.get_month(month, plan_id)
+    internal = await _internal_resolver(plan_id)
 
     # Group categories by category_group_name and sum activity
     group_activity: dict[str, int] = {}
     for cat in month_detail.categories:
-        group_name = cat.category_group_name or "Uncategorized"
-        if group_name in MONEY_FLOW_EXCLUDE_GROUPS:
+        if internal.is_internal(cat):
             continue
+        group_name = cat.category_group_name or "Uncategorized"
         group_activity[group_name] = group_activity.get(group_name, 0) + cat.activity
+    internal.log_fallbacks()
 
     # Filter out groups with zero activity
     group_activity = {name: activity for name, activity in group_activity.items() if activity != 0}
@@ -75,14 +86,15 @@ async def get_spending_by_category(plan_id: str, month: str = "current") -> str:
         month = today.replace(day=1).strftime("%Y-%m-%d")
 
     month_detail = await _shared.cache.get_month(month, plan_id)
+    internal = await _internal_resolver(plan_id)
 
     # Collect categories with non-zero activity, excluding internal groups
     categories = []
     total_spent_mu = 0
     for cat in month_detail.categories:
-        group_name = cat.category_group_name or "Uncategorized"
-        if group_name in MONEY_FLOW_EXCLUDE_GROUPS:
+        if internal.is_internal(cat):
             continue
+        group_name = cat.category_group_name or "Uncategorized"
         if cat.activity == 0:
             continue
         spent_mu = abs(cat.activity)
@@ -94,6 +106,8 @@ async def get_spending_by_category(plan_id: str, month: str = "current") -> str:
             "spent_mu": spent_mu,
             "balance_mu": cat.balance,
         })
+
+    internal.log_fallbacks()
 
     # Sort by spending (highest first) and compute percentages
     categories.sort(key=lambda c: c["spent_mu"], reverse=True)

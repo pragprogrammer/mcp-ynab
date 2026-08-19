@@ -67,7 +67,7 @@ Nested inside `Transaction.subtransactions` for split transactions.
 ### Category
 
 **All fields**: `id`, `category_group_id`, `category_group_name`, `name`, `hidden`,
-`original_category_group_id`, `note`, `budgeted`, `activity`, `balance`, `goal_type`,
+`internal`, `original_category_group_id`, `note`, `budgeted`, `activity`, `balance`, `goal_type`,
 `goal_needs_whole_amount`, `goal_day`, `goal_cadence`, `goal_cadence_frequency`,
 `goal_creation_month`, `goal_target`, `goal_target_month`, `goal_target_date`,
 `goal_percentage_complete`, `goal_months_to_budget`, `goal_under_funded`,
@@ -89,9 +89,16 @@ for budgeting analysis.
 
 ### CategoryGroup
 
-**All fields**: `id`, `name`, `hidden`, `deleted`, `categories`
+**All fields**: `id`, `name`, `hidden`, `internal`, `deleted`, `categories`
 
 **Default `exclude_fields`**: `["deleted"]`
+
+`internal` marks a group YNAB maintains itself (`Internal Master Category`,
+`Credit Card Payments`, `Hidden Categories`) rather than one the user created.
+It is kept in responses by default because it is what analytics exclude on. Note
+it does **not** inherit: a Credit Card Payment category is `internal: false`
+inside an `internal: true` group, so the group's flag is the meaningful one.
+`null` means the API did not return the flag.
 
 ### MonthSummary / MonthDetail
 
