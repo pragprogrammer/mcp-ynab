@@ -176,7 +176,7 @@ class CacheService:
                 # Store group without nested categories to avoid duplication
                 flat_groups.append(CategoryGroup(
                     id=group.id, name=group.name, hidden=group.hidden,
-                    deleted=group.deleted, categories=[],
+                    internal=group.internal, deleted=group.deleted, categories=[],
                 ))
 
             await self.delta.upsert_entities(plan_id, ENTITY_CATEGORY_GROUP, flat_groups)

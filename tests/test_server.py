@@ -87,7 +87,12 @@ DB_PATH = "src.server._shared._ensure_db"
 
 @pytest.fixture
 def mock_cache():
-    with patch(CACHE_PATH) as mock, patch(DB_PATH, new_callable=AsyncMock):
+    # AsyncMock so a method a test does not stub is still awaitable. Analytics
+    # calls get_categories(); unstubbed it yields an empty category map, which is
+    # the unresolved-group path — the same path a historical month takes.
+    with patch(CACHE_PATH, new_callable=AsyncMock) as mock, patch(
+        DB_PATH, new_callable=AsyncMock
+    ):
         yield mock
 
 

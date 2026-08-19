@@ -23,6 +23,12 @@ class Category(YNABBaseModel):
     category_group_name: str | None = Field(default=None)
     name: str = Field()
     hidden: bool = Field(default=False)
+    # Required on both models in YNAB spec 1.86.0. Nullable here so an absent
+    # flag is distinguishable from a false one: absent must degrade to the legacy
+    # group-name check, false must not. Note the flag does NOT inherit — Credit
+    # Card Payment categories are internal=false inside an internal=true group,
+    # so the *group's* flag is the one that means "not user spending".
+    internal: bool | None = Field(default=None)
     original_category_group_id: str | None = Field(default=None)
     note: str | None = Field(default=None)
     budgeted: Milliunit = Field(default=0)
@@ -50,5 +56,6 @@ class CategoryGroup(YNABBaseModel):
     id: str = Field()
     name: str = Field()
     hidden: bool = Field(default=False)
+    internal: bool | None = Field(default=None)
     deleted: bool = Field(default=False)
     categories: list[Category] = Field(default=[])
