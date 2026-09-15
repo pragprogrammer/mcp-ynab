@@ -29,6 +29,25 @@ _TOKEN_MIN_LEN = 20
 _HAS_WHITESPACE = re.compile(r"\s")
 
 
+def _read_stdin_token() -> str:
+    """Read a token from stdin, tolerating a byte-order mark.
+
+    Windows PowerShell 5.1 prefixes anything it pipes to a native executable
+    with a UTF-8 BOM. A BOM is not whitespace, so .strip() leaves it in place
+    and it then reads as a control character — decoding as utf-8-sig consumes
+    it. Any stray BOM elsewhere in the input is dropped too, which clipboard
+    and editor round-trips occasionally introduce.
+    """
+    raw = getattr(sys.stdin, "buffer", None)
+    if raw is None:  # stdin already wrapped, e.g. under a test harness
+        return sys.stdin.read().replace("﻿", "").strip()
+    try:
+        text = raw.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return ""
+    return text.replace("﻿", "").strip()
+
+
 def _why_not_a_token(token: str) -> str | None:
     """Explain why `token` cannot be a YNAB token, or None if it might be.
 
@@ -89,7 +108,7 @@ def auth_login(from_stdin: bool = False) -> int:
         # For terminals where pasting into a hidden prompt does not work, and
         # for headless setups. Piping from a file keeps the token out of argv
         # and out of shell history, which is the property that matters.
-        token = sys.stdin.read().strip()
+        token = _read_stdin_token()
     else:
         # Both streams, not just stdin. Under Git Bash/MSYS on Windows
         # sys.stdin.isatty() reports True even when stdin is redirected, and

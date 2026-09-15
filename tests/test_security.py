@@ -564,3 +564,51 @@ class TestReadOnlyMode:
     def test_writes_are_enabled_by_default(self):
         # Read-only is opt-in: the default install can still write.
         assert GATED_TOOLS <= _tool_names()
+
+
+# ── Token input handling ──────────────────────────────────────
+
+
+class TestTokenInput:
+    """Every case here was hit while setting the server up for real on Windows."""
+
+    def test_control_character_is_rejected_with_the_real_cause(self):
+        from src.cli import _why_not_a_token
+
+        # The Windows console delivers Ctrl+V to a hidden getpass prompt as this
+        # character rather than pasting. Left unchecked it builds a malformed
+        # Authorization header and YNAB answers with a bodyless HTTP 400.
+        problem = _why_not_a_token("\x16")
+        assert problem is not None
+        assert "Ctrl+V" in problem
+
+    def test_whitespace_is_rejected(self):
+        from src.cli import _why_not_a_token
+
+        assert "whitespace" in _why_not_a_token("a" * 32 + " " + "b" * 32)
+
+    def test_partial_paste_is_rejected(self):
+        from src.cli import _why_not_a_token
+
+        assert "character(s)" in _why_not_a_token("abc123")
+
+    def test_plausible_token_is_accepted(self):
+        from src.cli import _why_not_a_token
+
+        assert _why_not_a_token("a" * 64) is None
+
+    def test_bom_prefixed_stdin_is_accepted(self):
+        """PowerShell 5.1 puts a UTF-8 BOM in front of anything it pipes."""
+        import io
+
+        from src.cli import _read_stdin_token, _why_not_a_token
+
+        token = "b" * 64
+        stream = io.TextIOWrapper(io.BytesIO(b"\xef\xbb\xbf" + token.encode() + b"\r\n"))
+        with patch("sys.stdin", stream):
+            read = _read_stdin_token()
+
+        # A BOM is not whitespace, so .strip() leaves it and it reads as a
+        # control character. utf-8-sig consumes it.
+        assert read == token
+        assert _why_not_a_token(read) is None

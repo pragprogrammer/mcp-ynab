@@ -183,6 +183,12 @@ your terminal will not cooperate, pipe the token from a file:
 mcp-ynab auth login --stdin < token.txt && rm token.txt
 ```
 
+In PowerShell, the clipboard works directly and leaves nothing on disk:
+
+```powershell
+Get-Clipboard | mcp-ynab auth login --stdin
+```
+
 `--stdin` is also the headless/CI path. It keeps the token out of `argv` and out
 of shell history, which is the property that matters; `echo <token> | ...` does
 not, because the token lands in history. Running it again replaces the stored token, which is
