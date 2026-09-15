@@ -33,7 +33,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mcp-ynab = "src.server:main"
+mcp-ynab = "src.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/pragprogrammer/mcp-ynab"
