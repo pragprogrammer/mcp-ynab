@@ -172,7 +172,20 @@ mcp-ynab auth login
 
 Reads the token with `getpass` (hidden, never in `argv` or shell history),
 validates it against `GET /user`, and only then stores it. An invalid token is
-refused rather than saved. Running it again replaces the stored token, which is
+refused rather than saved.
+
+Input is invisible as you type or paste — that is `getpass` working, not a hang.
+On the Windows console, Ctrl+V at a hidden prompt is delivered as a literal
+control character rather than pasting; right-click usually pastes instead. If
+your terminal will not cooperate, pipe the token from a file:
+
+```bash
+mcp-ynab auth login --stdin < token.txt && rm token.txt
+```
+
+`--stdin` is also the headless/CI path. It keeps the token out of `argv` and out
+of shell history, which is the property that matters; `echo <token> | ...` does
+not, because the token lands in history. Running it again replaces the stored token, which is
 how you rotate: revoke the old one at
 <https://app.ynab.com/settings/developer>, create a new one, run `auth login`.
 

@@ -29,6 +29,14 @@ The token is read hidden, validated against the YNAB API, and then saved to
 Windows Credential Manager, macOS Keychain, or Secret Service. It does not go
 into any config file, and it is not read from `argv` or left in shell history.
 
+Nothing appears as you type or paste — that is intended. If your terminal will
+not paste into a hidden prompt (the Windows console sends Ctrl+V as a control
+character rather than pasting), feed it from a file instead:
+
+```bash
+uv tool run mcp-ynab auth login --stdin < token.txt
+```
+
 ```bash
 uv tool run mcp-ynab auth status   # which source is in use, plus a fingerprint
 uv tool run mcp-ynab auth logout   # remove the stored token

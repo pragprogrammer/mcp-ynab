@@ -16,10 +16,41 @@ import argparse
 import asyncio
 import getpass
 import os
+import re
 import sys
 from pathlib import Path
 
 from src.security import credentials
+
+# A YNAB personal access token is 64 printable ASCII characters with no spaces.
+# The floor below is deliberately loose: the point is to catch input that cannot
+# be a token at all, not to encode YNAB's exact format and break when it changes.
+_TOKEN_MIN_LEN = 20
+_HAS_WHITESPACE = re.compile(r"\s")
+
+
+def _why_not_a_token(token: str) -> str | None:
+    """Explain why `token` cannot be a YNAB token, or None if it might be.
+
+    Worth checking before the network call. A token containing a control
+    character builds a malformed Authorization header, and YNAB answers that
+    with a bodyless HTTP 400 that says nothing about the actual cause.
+    """
+    if any(not c.isprintable() for c in token):
+        return (
+            "the input contains control characters rather than a token.\n"
+            "  On the Windows console, Ctrl+V at a hidden prompt is delivered as a\n"
+            "  literal control character instead of pasting. Try right-clicking to\n"
+            "  paste, or skip pasting entirely with:  auth login --stdin"
+        )
+    if _HAS_WHITESPACE.search(token):
+        return "the input contains whitespace; a YNAB token has none."
+    if len(token) < _TOKEN_MIN_LEN:
+        return (
+            f"the input is {len(token)} character(s); a YNAB personal access token "
+            "is 64. A partial paste looks like this."
+        )
+    return None
 
 
 def _db_path() -> str:
@@ -31,6 +62,8 @@ def _db_path() -> str:
 
 async def _validate_token(token: str) -> tuple[bool, str]:
     """Check a token against the live API. Returns (ok, detail)."""
+    import httpx
+
     from src.ynab_client import YNABClient, YNABError
 
     client = YNABClient(token)
@@ -39,27 +72,55 @@ async def _validate_token(token: str) -> tuple[bool, str]:
         return True, f"user id {user.id}"
     except YNABError as e:
         return False, f"YNAB rejected the token: {e.message}"
-    except Exception as e:
+    except httpx.HTTPStatusError as e:
+        # YNAB answered. Do not report that as a failure to reach it.
+        return False, f"YNAB rejected the request with HTTP {e.response.status_code}"
+    except httpx.RequestError as e:
         return False, f"could not reach YNAB: {type(e).__name__}: {e}"
+    except Exception as e:
+        return False, f"unexpected failure validating the token: {type(e).__name__}: {e}"
     finally:
         await client.close()
 
 
-def auth_login() -> int:
-    """Read a token interactively, validate it, then store it."""
-    if not sys.stdin.isatty():
-        print(
-            "ERROR: `auth login` needs a terminal. The token is read with getpass so "
-            "it never lands in argv or shell history.",
-            file=sys.stderr,
-        )
-        return 2
+def auth_login(from_stdin: bool = False) -> int:
+    """Read a token, validate it, then store it."""
+    if from_stdin:
+        # For terminals where pasting into a hidden prompt does not work, and
+        # for headless setups. Piping from a file keeps the token out of argv
+        # and out of shell history, which is the property that matters.
+        token = sys.stdin.read().strip()
+    else:
+        # Both streams, not just stdin. Under Git Bash/MSYS on Windows
+        # sys.stdin.isatty() reports True even when stdin is redirected, and
+        # getpass resolves to win_getpass, which reads the console directly and
+        # ignores the redirect — so a stdin-only check passes and the process
+        # then blocks forever waiting for a human who is not there. Requiring
+        # stdout to be a terminal too turns that hang into this message.
+        if not (sys.stdin.isatty() and sys.stdout.isatty()):
+            print(
+                "ERROR: `auth login` needs an interactive terminal. The token is "
+                "read with getpass so it never lands in argv or shell history.\n"
+                "       To feed it from a file instead: auth login --stdin",
+                file=sys.stderr,
+            )
+            return 2
 
-    print("Paste your YNAB personal access token (input is hidden).")
-    print("Create one at https://app.ynab.com/settings/developer\n")
-    token = getpass.getpass("Token: ").strip()
+        print("Paste your YNAB personal access token.")
+        print("Create one at https://app.ynab.com/settings/developer\n")
+        print("Input is HIDDEN: nothing appears as you type or paste. That is normal.")
+        print("If Ctrl+V does nothing, try right-click, or rerun with --stdin.\n")
+        token = getpass.getpass("Token: ").strip()
+
     if not token:
         print("ERROR: no token entered.", file=sys.stderr)
+        return 2
+
+    problem = _why_not_a_token(token)
+    if problem:
+        # Caught here so the user gets the real cause, rather than an opaque
+        # rejection from an API that never saw a well-formed request.
+        print(f"ERROR: {problem}\nNothing was stored.", file=sys.stderr)
         return 2
 
     print("Validating against the YNAB API...")
@@ -174,7 +235,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     auth = sub.add_parser("auth", help="manage the stored YNAB token")
     auth_sub = auth.add_subparsers(dest="auth_command")
-    auth_sub.add_parser("login", help="read a token, validate it, store it")
+    login = auth_sub.add_parser("login", help="read a token, validate it, store it")
+    login.add_argument(
+        "--stdin",
+        action="store_true",
+        help="read the token from stdin instead of prompting, e.g. "
+        "`type token.txt | mcp-ynab auth login --stdin`",
+    )
     auth_sub.add_parser("status", help="show which credential source is in use")
     auth_sub.add_parser("logout", help="delete the stored token")
 
@@ -193,7 +260,9 @@ def main() -> int:
         return serve()
 
     if args.command == "auth":
-        handlers = {"login": auth_login, "status": auth_status, "logout": auth_logout}
+        if args.auth_command == "login":
+            return auth_login(from_stdin=args.stdin)
+        handlers = {"status": auth_status, "logout": auth_logout}
         handler = handlers.get(args.auth_command)
         if handler is None:
             parser.parse_args(["auth", "--help"])
