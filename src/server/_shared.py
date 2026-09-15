@@ -40,6 +40,12 @@ from src.models.transaction import (
     Transaction,
 )
 from src.models.user import User
+from src.security.consent import (
+    ConsentDenied,
+    ConsentUnavailable,
+    ConsentViolation,
+    ReadOnlyMode,
+)
 from src.security.crypto import CacheDecryptionError, CacheEncryptionUnavailable
 from src.security.redaction import scrub
 from src.ynab_client import YNABClient, YNABError
@@ -173,6 +179,14 @@ def handle_errors(func):
         try:
             await _ensure_db()
             return await func(*args, **kwargs)
+        except ConsentUnavailable as e:
+            return _error({"error": str(e), "applied": False, "reason": "consent_unavailable"})
+        except ConsentDenied as e:
+            return _error({"error": str(e), "applied": False, "reason": "consent_denied"})
+        except ReadOnlyMode as e:
+            return _error({"error": str(e), "applied": False, "reason": "read_only"})
+        except ConsentViolation as e:
+            return _error({"error": str(e), "applied": False, "reason": "consent_violation"})
         except (CacheEncryptionUnavailable, CacheDecryptionError) as e:
             return _error({"error": str(e)})
         except YNABError as e:

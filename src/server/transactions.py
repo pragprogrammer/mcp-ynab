@@ -1,7 +1,20 @@
 import json
 
+from mcp.server.mcpserver import Context
+
+from src.security import consent, diff
 from src.server import _shared
 from src.server._shared import dollars_to_milliunits, serialize, serialize_list
+
+
+async def _transaction_preimage(transaction_id: str, plan_id: str) -> dict:
+    """Read a transaction straight from the API, bypassing the cache.
+
+    Bypassing the cache is not optional. A stale cached row would show the human
+    a "before" that is not what YNAB actually holds, and the whole point of the
+    consent prompt is that the before is true.
+    """
+    return (await _shared.client.get_transaction(transaction_id, plan_id)).model_dump()
 
 
 def _prepare_subtransaction(sub: dict) -> dict:
@@ -232,8 +245,11 @@ async def create_transaction(
     import_id: str | None = None,
     subtransactions: list[dict] | None = None,
     exclude_fields: list[str] | None = None,
+    ctx: Context | None = None,
 ) -> str:
-    """Create a new transaction. Future-dated transactions are not permitted (use scheduled transactions instead).
+    """Create a new transaction. Requires human confirmation.
+
+    Future-dated transactions are not permitted (use scheduled transactions instead).
 
     Args:
         plan_id: The plan ID (use list_plans to find available IDs)
@@ -277,6 +293,19 @@ async def create_transaction(
     if memo:
         transaction["memo"] = memo
 
+    fingerprint = await consent.confirm(
+        ctx,
+        action="Create transaction",
+        plan_id=plan_id,
+        payload=transaction,
+        body=(
+            "This transaction will be created:\n"
+            f"  {diff.describe_transaction(transaction)}\n\n"
+            "Exact fields sent to YNAB:\n"
+            f"{diff.render_new_object(transaction)}"
+        ),
+    )
+    consent.assert_unchanged(transaction, fingerprint)
     txn = await _shared.cache.create_transaction(transaction, plan_id)
     return serialize(txn, exclude_fields=exclude_fields)
 
@@ -288,8 +317,11 @@ async def create_transactions(
     account_id: str,
     transactions: list[dict],
     exclude_fields: list[str] | None = None,
+    ctx: Context | None = None,
 ) -> str:
-    """Create multiple transactions in a single API call. Ideal for bulk imports.
+    """Create multiple transactions in a single API call. Requires human confirmation.
+
+    Ideal for bulk imports.
 
     Future-dated transactions are not permitted. The response includes any duplicate_import_ids
     that were rejected because of an existing import_id on the same account.
@@ -332,6 +364,21 @@ async def create_transactions(
             ]
         prepared.append(txn)
 
+    # Every row is itemised, never summarised as a count. "12 transactions" is
+    # exactly the prompt a human waves through without having seen it. If that
+    # makes the prompt long, the prompt is long: truncating here would be a
+    # correctness bug, not a UX trade-off.
+    listing = "\n".join(
+        f"  {i:>3}. {diff.describe_transaction(t)}" for i, t in enumerate(prepared, 1)
+    )
+    fingerprint = await consent.confirm(
+        ctx,
+        action=f"Create {len(prepared)} transaction(s)",
+        plan_id=plan_id,
+        payload=prepared,
+        body=f"All {len(prepared)} will be created:\n{listing}",
+    )
+    consent.assert_unchanged(prepared, fingerprint)
     txns = await _shared.cache.create_transactions(prepared, plan_id)
     return serialize_list(txns, exclude_fields=exclude_fields)
 
@@ -353,8 +400,11 @@ async def update_transaction(
     flag_color: str | None = None,
     subtransactions: list[dict] | None = None,
     exclude_fields: list[str] | None = None,
+    ctx: Context | None = None,
 ) -> str:
-    """Update an existing transaction. Only provide the fields you want to change.
+    """Update an existing transaction. Requires human confirmation.
+
+    Only provide the fields you want to change.
 
     Future-dated transactions are not permitted. Split transaction amounts and dates
     cannot be changed. If an existing transaction is a split, category_id cannot be
@@ -404,6 +454,16 @@ async def update_transaction(
             _prepare_subtransaction(sub) for sub in subtransactions
         ]
 
+    before = await _transaction_preimage(transaction_id, plan_id)
+    fingerprint = await consent.confirm(
+        ctx,
+        action="Update transaction",
+        plan_id=plan_id,
+        subject=diff.describe_transaction(before),
+        before=before,
+        payload=transaction,
+    )
+    consent.assert_unchanged(transaction, fingerprint)
     txn = await _shared.cache.update_transaction(transaction_id, transaction, plan_id)
     return serialize(txn, exclude_fields=exclude_fields)
 
@@ -414,8 +474,9 @@ async def delete_transaction(
     transaction_id: str,
     plan_id: str,
     exclude_fields: list[str] | None = None,
+    ctx: Context | None = None,
 ) -> str:
-    """Delete a transaction.
+    """Delete a transaction. Requires human confirmation.
 
     Args:
         transaction_id: The transaction ID to delete
@@ -424,14 +485,27 @@ async def delete_transaction(
             If omitted, the model's default exclude list is used (see FIELDS.md).
             Pass [] to return all fields. Pass a custom list to override the default.
     """
+    before = await _transaction_preimage(transaction_id, plan_id)
+    target = {"transaction_id": transaction_id, "plan_id": plan_id}
+    fingerprint = await consent.confirm(
+        ctx,
+        action="DELETE transaction",
+        plan_id=plan_id,
+        payload=target,
+        body=(
+            "This transaction will be permanently deleted:\n"
+            f"  {diff.describe_transaction(before)}"
+        ),
+    )
+    consent.assert_unchanged(target, fingerprint)
     txn = await _shared.cache.delete_transaction(transaction_id, plan_id)
     return serialize(txn, exclude_fields=exclude_fields)
 
 
 @_shared.mcp.tool()
 @_shared.handle_errors
-async def import_transactions(plan_id: str) -> str:
-    """Import available transactions on all linked accounts for the given plan.
+async def import_transactions(plan_id: str, ctx: Context | None = None) -> str:
+    """Import available transactions on all linked accounts. Requires human confirmation.
 
     Equivalent to clicking 'Import' on each account in the YNAB web app or tapping
     the 'New Transactions' banner in the mobile app. Returns the list of transaction
@@ -440,6 +514,28 @@ async def import_transactions(plan_id: str) -> str:
     Args:
         plan_id: The plan ID (use list_plans to find available IDs)
     """
+    # No diff is possible here: YNAB decides what gets imported, and the result
+    # is not knowable in advance. Name the accounts that will be touched and say
+    # so plainly rather than implying a preview that does not exist.
+    accounts, _ = await _shared.client.get_accounts(plan_id)
+    linked = [a for a in accounts if a.direct_import_linked and not a.closed and not a.deleted]
+    if linked:
+        affected = "\n".join(f"  - {a.name} ({a.type})" for a in linked)
+    else:
+        affected = "  (no accounts are currently linked for direct import)"
+    target = {"action": "import_transactions", "plan_id": plan_id}
+    fingerprint = await consent.confirm(
+        ctx,
+        action="Import transactions from linked accounts",
+        plan_id=plan_id,
+        payload=target,
+        body=f"Accounts that may receive imported transactions:\n{affected}",
+        note=(
+            "YNAB decides which transactions are imported, so what this creates "
+            "is NOT known in advance and cannot be previewed here."
+        ),
+    )
+    consent.assert_unchanged(target, fingerprint)
     transaction_ids = await _shared.cache.import_transactions(plan_id)
     return json.dumps({"transaction_ids": transaction_ids}, indent=2)
 
@@ -450,8 +546,9 @@ async def update_transactions(
     plan_id: str,
     transactions: list[dict],
     exclude_fields: list[str] | None = None,
+    ctx: Context | None = None,
 ) -> str:
-    """Update multiple transactions in a single API call.
+    """Update multiple transactions in a single API call. Requires human confirmation.
 
     Each transaction must include either 'id' or 'import_id' for lookup (not both).
     Only provided fields are updated (sparse update). Ideal for bulk recategorization,
@@ -504,5 +601,34 @@ async def update_transactions(
             ]
         prepared.append(txn)
 
+    # Every row gets its own before/after. A row looked up by import_id has no
+    # pre-image available — say so, rather than leaving a blank that reads as
+    # "nothing changes".
+    blocks = []
+    for i, txn in enumerate(prepared, 1):
+        changes = {k: v for k, v in txn.items() if k not in ("id", "import_id")}
+        if "id" in txn:
+            before = await _transaction_preimage(txn["id"], plan_id)
+            header = f"  {i:>3}. {diff.describe_transaction(before)}"
+        else:
+            before = {}
+            header = (
+                f"  {i:>3}. (looked up by import_id {txn['import_id']}; "
+                "no pre-image available)"
+            )
+        block = diff.render_change_block(
+            diff.diff_fields(before, changes), indent="       "
+        )
+        blocks.append(header + "\n" + block)
+    fingerprint = await consent.confirm(
+        ctx,
+        action=f"Update {len(prepared)} transaction(s)",
+        plan_id=plan_id,
+        payload=prepared,
+        body="All {} will be updated:\n{}".format(
+            len(prepared), "\n".join(blocks)
+        ),
+    )
+    consent.assert_unchanged(prepared, fingerprint)
     txns = await _shared.cache.update_transactions(prepared, plan_id)
     return serialize_list(txns, exclude_fields=exclude_fields)

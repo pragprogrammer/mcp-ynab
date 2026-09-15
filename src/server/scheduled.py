@@ -1,5 +1,23 @@
+from mcp.server.mcpserver import Context
+
+from src.security import consent, diff
 from src.server import _shared
 from src.server._shared import dollars_to_milliunits, serialize, serialize_list
+
+
+async def _scheduled_preimage(scheduled_transaction_id: str, plan_id: str) -> dict:
+    """Read a scheduled transaction straight from the API, bypassing the cache.
+
+    The write payload calls the next occurrence "date" while the API reports it
+    as "date_next"; mirroring it under both names lets the diff line up the field
+    the caller is actually changing. Both values come from the API response.
+    """
+    txn = (
+        await _shared.client.get_scheduled_transaction(scheduled_transaction_id, plan_id)
+    ).model_dump()
+    if txn.get("date_next") is not None:
+        txn.setdefault("date", txn["date_next"])
+    return txn
 
 
 @_shared.mcp.tool()
@@ -53,8 +71,11 @@ async def create_scheduled_transaction(
     flag_color: str | None = None,
     frequency: str | None = None,
     exclude_fields: list[str] | None = None,
+    ctx: Context | None = None,
 ) -> str:
-    """Create a scheduled transaction (a transaction with a future date).
+    """Create a scheduled transaction. Requires human confirmation.
+
+    A scheduled transaction is a transaction with a future date.
 
     Splits are not supported on this endpoint. Date must be in the future, no more
     than 5 years out.
@@ -95,6 +116,19 @@ async def create_scheduled_transaction(
     if frequency is not None:
         scheduled["frequency"] = frequency
 
+    fingerprint = await consent.confirm(
+        ctx,
+        action="Create scheduled transaction",
+        plan_id=plan_id,
+        payload=scheduled,
+        body=(
+            "This recurring transaction will be created:\n"
+            f"  {diff.describe_scheduled_transaction(scheduled)}\n\n"
+            "Exact fields sent to YNAB:\n"
+            f"{diff.render_new_object(scheduled)}"
+        ),
+    )
+    consent.assert_unchanged(scheduled, fingerprint)
     txn = await _shared.cache.create_scheduled_transaction(scheduled, plan_id)
     return serialize(txn, exclude_fields=exclude_fields)
 
@@ -114,8 +148,9 @@ async def update_scheduled_transaction(
     flag_color: str | None = None,
     frequency: str | None = None,
     exclude_fields: list[str] | None = None,
+    ctx: Context | None = None,
 ) -> str:
-    """Update a scheduled transaction.
+    """Update a scheduled transaction. Requires human confirmation.
 
     The API requires account_id and date on every update. Splits are not supported on
     this endpoint. Date must be in the future, no more than 5 years out.
@@ -157,6 +192,16 @@ async def update_scheduled_transaction(
     if frequency is not None:
         scheduled["frequency"] = frequency
 
+    before = await _scheduled_preimage(scheduled_transaction_id, plan_id)
+    fingerprint = await consent.confirm(
+        ctx,
+        action="Update scheduled transaction",
+        plan_id=plan_id,
+        subject=diff.describe_scheduled_transaction(before),
+        before=before,
+        payload=scheduled,
+    )
+    consent.assert_unchanged(scheduled, fingerprint)
     txn = await _shared.cache.update_scheduled_transaction(
         scheduled_transaction_id, scheduled, plan_id
     )
@@ -169,8 +214,9 @@ async def delete_scheduled_transaction(
     scheduled_transaction_id: str,
     plan_id: str,
     exclude_fields: list[str] | None = None,
+    ctx: Context | None = None,
 ) -> str:
-    """Delete a scheduled transaction.
+    """Delete a scheduled transaction. Requires human confirmation.
 
     Args:
         scheduled_transaction_id: The scheduled transaction ID to delete
@@ -179,5 +225,21 @@ async def delete_scheduled_transaction(
             If omitted, the model's default exclude list is used (see FIELDS.md).
             Pass [] to return all fields. Pass a custom list to override the default.
     """
+    before = await _scheduled_preimage(scheduled_transaction_id, plan_id)
+    target = {
+        "scheduled_transaction_id": scheduled_transaction_id,
+        "plan_id": plan_id,
+    }
+    fingerprint = await consent.confirm(
+        ctx,
+        action="DELETE scheduled transaction",
+        plan_id=plan_id,
+        payload=target,
+        body=(
+            "This recurring transaction will be permanently deleted:\n"
+            f"  {diff.describe_scheduled_transaction(before)}"
+        ),
+    )
+    consent.assert_unchanged(target, fingerprint)
     txn = await _shared.cache.delete_scheduled_transaction(scheduled_transaction_id, plan_id)
     return serialize(txn, exclude_fields=exclude_fields)

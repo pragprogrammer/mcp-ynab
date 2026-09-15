@@ -1,3 +1,6 @@
+from mcp.server.mcpserver import Context
+
+from src.security import consent
 from src.server import _shared
 from src.server._shared import dollars_to_milliunits, serialize, serialize_list
 
@@ -27,8 +30,9 @@ async def create_account(
     type: str,
     balance: float,
     exclude_fields: list[str] | None = None,
+    ctx: Context | None = None,
 ) -> str:
-    """Create a new account.
+    """Create a new account. Requires human confirmation.
 
     Args:
         plan_id: The plan ID (use list_plans to find available IDs)
@@ -44,6 +48,10 @@ async def create_account(
         "type": type,
         "balance": dollars_to_milliunits(balance),
     }
+    fingerprint = await consent.confirm(
+        ctx, action="Create account", plan_id=plan_id, payload=account
+    )
+    consent.assert_unchanged(account, fingerprint)
     acct = await _shared.cache.create_account(account, plan_id)
     return serialize(acct, exclude_fields=exclude_fields)
 

@@ -77,20 +77,6 @@ def _make_scheduled_transaction(**overrides) -> ScheduledTransaction:
     return ScheduledTransaction(**{**defaults, **overrides})
 
 
-# We need to patch the module-level objects in server/_shared.py.
-# The server package creates `cache` and `client` at import time,
-# so we patch `src.server._shared.cache` (the CacheService instance).
-
-CACHE_PATH = "src.server._shared.cache"
-DB_PATH = "src.server._shared._ensure_db"
-
-
-@pytest.fixture
-def mock_cache():
-    with patch(CACHE_PATH) as mock, patch(DB_PATH, new_callable=AsyncMock):
-        yield mock
-
-
 # ── Plan Tools ──────────────────────────────────────────────
 
 
@@ -234,25 +220,27 @@ class TestGetTransactionsByPayee:
 
 class TestCreateTransaction:
     @pytest.mark.asyncio
-    async def test_converts_dollars_to_milliunits(self, mock_cache):
+    async def test_converts_dollars_to_milliunits(self, mock_cache, mock_client, consenting_ctx):
         from src.server import create_transaction
 
         mock_cache.create_transaction = AsyncMock(return_value=_make_transaction(amount=-50250))
         await create_transaction(
             plan_id="bud-1", account_id="acc-1", date="2026-03-15", amount=-50.25,
+            ctx=consenting_ctx,
         )
         call_args = mock_cache.create_transaction.call_args
         txn_dict = call_args[0][0]
         assert txn_dict["amount"] == -50250
 
     @pytest.mark.asyncio
-    async def test_includes_optional_fields(self, mock_cache):
+    async def test_includes_optional_fields(self, mock_cache, mock_client, consenting_ctx):
         from src.server import create_transaction
 
         mock_cache.create_transaction = AsyncMock(return_value=_make_transaction())
         await create_transaction(
             plan_id="bud-1", account_id="acc-1", date="2026-03-15", amount=-10.0,
             payee_name="Store", category_id="cat-1", memo="test",
+            ctx=consenting_ctx,
         )
         txn_dict = mock_cache.create_transaction.call_args[0][0]
         assert txn_dict["payee_name"] == "Store"
@@ -260,12 +248,13 @@ class TestCreateTransaction:
         assert txn_dict["memo"] == "test"
 
     @pytest.mark.asyncio
-    async def test_omits_none_optional_fields(self, mock_cache):
+    async def test_omits_none_optional_fields(self, mock_cache, mock_client, consenting_ctx):
         from src.server import create_transaction
 
         mock_cache.create_transaction = AsyncMock(return_value=_make_transaction())
         await create_transaction(
             plan_id="bud-1", account_id="acc-1", date="2026-03-15", amount=-10.0,
+            ctx=consenting_ctx,
         )
         txn_dict = mock_cache.create_transaction.call_args[0][0]
         assert "payee_name" not in txn_dict
@@ -275,7 +264,7 @@ class TestCreateTransaction:
 
 class TestCreateTransactions:
     @pytest.mark.asyncio
-    async def test_converts_all_amounts(self, mock_cache):
+    async def test_converts_all_amounts(self, mock_cache, mock_client, consenting_ctx):
         from src.server import create_transactions
 
         mock_cache.create_transactions = AsyncMock(
@@ -288,6 +277,7 @@ class TestCreateTransactions:
                 {"date": "2026-03-15", "amount": -25.50},
                 {"date": "2026-03-16", "amount": -10.00, "payee_name": "Cafe"},
             ],
+            ctx=consenting_ctx,
         )
         prepared = mock_cache.create_transactions.call_args[0][0]
         assert prepared[0]["amount"] == -25500
@@ -295,7 +285,7 @@ class TestCreateTransactions:
         assert prepared[1]["payee_name"] == "Cafe"
 
     @pytest.mark.asyncio
-    async def test_per_transaction_account_override(self, mock_cache):
+    async def test_per_transaction_account_override(self, mock_cache, mock_client, consenting_ctx):
         from src.server import create_transactions
 
         mock_cache.create_transactions = AsyncMock(return_value=[_make_transaction()])
@@ -303,12 +293,13 @@ class TestCreateTransactions:
             plan_id="bud-1",
             account_id="acc-default",
             transactions=[{"date": "2026-03-15", "amount": -5.0, "account_id": "acc-override"}],
+            ctx=consenting_ctx,
         )
         prepared = mock_cache.create_transactions.call_args[0][0]
         assert prepared[0]["account_id"] == "acc-override"
 
     @pytest.mark.asyncio
-    async def test_uses_default_account_id(self, mock_cache):
+    async def test_uses_default_account_id(self, mock_cache, mock_client, consenting_ctx):
         from src.server import create_transactions
 
         mock_cache.create_transactions = AsyncMock(return_value=[_make_transaction()])
@@ -316,6 +307,7 @@ class TestCreateTransactions:
             plan_id="bud-1",
             account_id="acc-default",
             transactions=[{"date": "2026-03-15", "amount": -5.0}],
+            ctx=consenting_ctx,
         )
         prepared = mock_cache.create_transactions.call_args[0][0]
         assert prepared[0]["account_id"] == "acc-default"
@@ -323,38 +315,38 @@ class TestCreateTransactions:
 
 class TestUpdateTransaction:
     @pytest.mark.asyncio
-    async def test_converts_amount_to_milliunits(self, mock_cache):
+    async def test_converts_amount_to_milliunits(self, mock_cache, mock_client, consenting_ctx):
         from src.server import update_transaction
 
         mock_cache.update_transaction = AsyncMock(return_value=_make_transaction())
-        await update_transaction(plan_id="bud-1", transaction_id="txn-1", amount=-75.00)
+        await update_transaction(plan_id="bud-1", transaction_id="txn-1", amount=-75.00, ctx=consenting_ctx)
         call_args = mock_cache.update_transaction.call_args
         txn_dict = call_args[0][1]
         assert txn_dict["amount"] == -75000
 
     @pytest.mark.asyncio
-    async def test_only_includes_provided_fields(self, mock_cache):
+    async def test_only_includes_provided_fields(self, mock_cache, mock_client, consenting_ctx):
         from src.server import update_transaction
 
         mock_cache.update_transaction = AsyncMock(return_value=_make_transaction())
-        await update_transaction(plan_id="bud-1", transaction_id="txn-1", memo="updated")
+        await update_transaction(plan_id="bud-1", transaction_id="txn-1", memo="updated", ctx=consenting_ctx)
         txn_dict = mock_cache.update_transaction.call_args[0][1]
         assert txn_dict == {"memo": "updated"}
 
 
 class TestDeleteTransaction:
     @pytest.mark.asyncio
-    async def test_deletes_and_returns(self, mock_cache):
+    async def test_deletes_and_returns(self, mock_cache, mock_client, consenting_ctx):
         from src.server import delete_transaction
 
         mock_cache.delete_transaction = AsyncMock(return_value=_make_transaction())
-        result = json.loads(await delete_transaction(transaction_id="txn-1", plan_id="bud-1"))
+        result = json.loads(await delete_transaction(transaction_id="txn-1", plan_id="bud-1", ctx=consenting_ctx))
         assert result["id"] == "txn-1"
 
 
 class TestUpdateTransactions:
     @pytest.mark.asyncio
-    async def test_converts_amounts_to_milliunits(self, mock_cache):
+    async def test_converts_amounts_to_milliunits(self, mock_cache, mock_client, consenting_ctx):
         from src.server import update_transactions
 
         mock_cache.update_transactions = AsyncMock(
@@ -366,13 +358,14 @@ class TestUpdateTransactions:
                 {"id": "t1", "amount": -25.50},
                 {"id": "t2", "amount": 10.00},
             ],
+            ctx=consenting_ctx,
         )
         prepared = mock_cache.update_transactions.call_args[0][0]
         assert prepared[0]["amount"] == -25500
         assert prepared[1]["amount"] == 10000
 
     @pytest.mark.asyncio
-    async def test_only_includes_provided_fields(self, mock_cache):
+    async def test_only_includes_provided_fields(self, mock_cache, mock_client, consenting_ctx):
         from src.server import update_transactions
 
         mock_cache.update_transactions = AsyncMock(
@@ -381,17 +374,19 @@ class TestUpdateTransactions:
         await update_transactions(
             plan_id="bud-1",
             transactions=[{"id": "t1", "memo": "updated"}],
+            ctx=consenting_ctx,
         )
         prepared = mock_cache.update_transactions.call_args[0][0]
         assert prepared[0] == {"id": "t1", "memo": "updated"}
 
     @pytest.mark.asyncio
-    async def test_requires_id_per_transaction(self, mock_cache):
+    async def test_requires_id_per_transaction(self, mock_cache, mock_client, consenting_ctx):
         from src.server import update_transactions
 
         result = json.loads(await update_transactions(
             plan_id="bud-1",
             transactions=[{"memo": "no id here"}],
+            ctx=consenting_ctx,
         ))
         assert "error" in result
         assert "id" in result["error"]
@@ -459,12 +454,13 @@ class TestGetCategoryForMonth:
 
 class TestUpdateCategoryForMonth:
     @pytest.mark.asyncio
-    async def test_converts_dollars_to_milliunits(self, mock_cache):
+    async def test_converts_dollars_to_milliunits(self, mock_cache, mock_client, consenting_ctx):
         from src.server import update_category_for_month
 
         mock_cache.update_category_for_month = AsyncMock(return_value=_make_category(budgeted=500000))
         await update_category_for_month(
-            category_id="cat-1", month="2026-03-01", budgeted=500.00, plan_id="bud-1"
+            category_id="cat-1", month="2026-03-01", budgeted=500.00, plan_id="bud-1",
+            ctx=consenting_ctx,
         )
         call_args = mock_cache.update_category_for_month.call_args
         assert call_args[0][2] == 500000  # third positional arg is budgeted in milliunits
