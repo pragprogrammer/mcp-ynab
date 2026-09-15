@@ -12,16 +12,32 @@ An MCP server that connects AI assistants to your [YNAB](https://www.ynab.com/) 
 - **Search & analytics** — text search across transactions, per-category spending breakdowns, Sankey flow data
 - **Bulk operations** — create or update multiple transactions in a single call
 - **Dollar amounts** — accepts dollars in parameters, converts to YNAB milliunits internally
+- **Token in the OS credential store** — not in a config file any agent can read
+- **Human confirmation for every write** — with a real before/after diff, read live from YNAB
+- **Encrypted cache** — cached budget data is AES-256-GCM at rest
 
 ## Quick Start
 
-```
-uv tool run mcp-ynab
+Store your [YNAB personal access token](https://app.ynab.com/settings/developer)
+once, in your OS credential store:
+
+```bash
+uv tool run mcp-ynab auth login
 ```
 
-Requires a [YNAB personal access token](https://app.ynab.com/settings/developer) set as `YNAB_API_KEY`.
+The token is read hidden, validated against the YNAB API, and then saved to
+Windows Credential Manager, macOS Keychain, or Secret Service. It does not go
+into any config file, and it is not read from `argv` or left in shell history.
+
+```bash
+uv tool run mcp-ynab auth status   # which source is in use, plus a fingerprint
+uv tool run mcp-ynab auth logout   # remove the stored token
+uv tool run mcp-ynab cache purge   # delete the local cache and its encryption key
+```
 
 ## Configuration
+
+No API key goes in the config — `auth login` already stored it.
 
 ### Claude Desktop / ChatGPT
 
@@ -32,10 +48,7 @@ Add to your config file:
   "mcpServers": {
     "ynab": {
       "command": "uv",
-      "args": ["tool", "run", "mcp-ynab"],
-      "env": {
-        "YNAB_API_KEY": "your-api-key-here"
-      }
+      "args": ["tool", "run", "mcp-ynab"]
     }
   }
 }
@@ -44,10 +57,47 @@ Add to your config file:
 ### Claude Code
 
 ```bash
-claude mcp add-json ynab --scope user '{"type":"stdio","command":"uv","args":["tool","run","mcp-ynab"],"env":{"YNAB_API_KEY":"your-api-key-here"}}'
+claude mcp add-json ynab --scope user '{"type":"stdio","command":"uv","args":["tool","run","mcp-ynab"]}'
 ```
 
 See [mcp-ynab.com](https://mcp-ynab.com) for config file locations and troubleshooting.
+
+### Environment variables
+
+| Variable | Default | Effect |
+|---|---|---|
+| `YNAB_API_KEY` | unset | Still honoured, with a deprecation warning on stderr. Putting it in an MCP client config writes your token in plaintext into a file any agent can read — prefer `auth login`. |
+| `YNAB_ALLOW_ENV_KEY` | `1` | Set to `0` to refuse `YNAB_API_KEY` entirely, so the credential store is the only accepted source. |
+| `YNAB_READ_ONLY` | `0` | Set to `1` to stop the 16 write tools being registered at all. They never reach the model's tool list. |
+| `YNAB_CACHE_ENCRYPTION` | `1` | Set to `0` to store the cache in plaintext. Debugging only. |
+
+## Writes require your confirmation
+
+Every tool that changes something in YNAB asks you first, showing the current
+state read live from the YNAB API alongside exactly what would change:
+
+```
+CONFIRM: Update transaction
+Plan: bud-1
+
+Current state, read from the YNAB API just now:
+  2026-03-15  Chez Nowhere  Groceries  -$50.25  cleared=uncleared  approved=no
+
+This will change:
+  amount   : -$50.25 -> -$60.00
+  approved : no -> yes
+
+Confirm to apply exactly this. Nothing else will be sent.
+```
+
+Bulk operations list every row rather than summarising a count. Declining, or a
+client that cannot ask you, blocks the write — there is no fallback that applies
+it unconfirmed.
+
+This relies on your MCP client supporting elicitation. **On a client that does
+not, writes will refuse outright.** See [SECURITY.md](./SECURITY.md) for the full
+threat model, including what the credential store does and does not protect
+against.
 
 ## Available Tools
 
@@ -80,11 +130,15 @@ uv sync
 # Run tests
 uv run pytest
 
+# Fresh-resolution smoke test (resolves from pyproject.toml, not uv.lock)
+python scripts/smoke_test.py
+
 # Run server standalone
 uv run python -m src.server
 ```
 
-Requires `YNAB_API_KEY` in `.env.local` for running the server.
+Running the server needs a token: `uv run python -m src.cli auth login`, or
+`YNAB_API_KEY` in `.env.local`.
 
 ## License
 
