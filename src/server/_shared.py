@@ -40,6 +40,7 @@ from src.models.transaction import (
     Transaction,
 )
 from src.models.user import User
+from src.security.redaction import scrub
 from src.ynab_client import YNABClient, YNABError
 
 try:
@@ -154,6 +155,15 @@ async def _ensure_db():
         _db_initialized = True
 
 
+def _error(payload: dict) -> str:
+    """Serialize an error payload with every registered secret scrubbed out.
+
+    Scrubbing the rendered JSON rather than each field means a token that shows
+    up in a nested value, or in a field added here later, is still caught.
+    """
+    return scrub(json.dumps(payload))
+
+
 def handle_errors(func):
     """Decorator that catches YNAB and HTTP errors and returns friendly messages."""
 
@@ -163,10 +173,10 @@ def handle_errors(func):
             await _ensure_db()
             return await func(*args, **kwargs)
         except YNABError as e:
-            return json.dumps({"error": e.message, "error_id": e.error_id, "status_code": e.status_code})
+            return _error({"error": e.message, "error_id": e.error_id, "status_code": e.status_code})
         except httpx.HTTPStatusError as e:
-            return json.dumps({"error": f"HTTP {e.response.status_code}: {e.response.text}"})
+            return _error({"error": f"HTTP {e.response.status_code}: {e.response.text}"})
         except httpx.RequestError as e:
-            return json.dumps({"error": f"Request failed: {e}"})
+            return _error({"error": f"Request failed: {e}"})
 
     return wrapper

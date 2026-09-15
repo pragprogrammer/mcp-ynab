@@ -3,6 +3,7 @@ from typing import Any
 
 from pydantic import SecretStr
 
+from src.security import redaction
 from src.models import (
     Account,
     PlanDetail,
@@ -41,6 +42,7 @@ class YNABClient:
         # header and is never stored on self, so no attribute of this client can
         # leak it into a repr or a tool return value.
         token = api_key.get_secret_value() if isinstance(api_key, SecretStr) else api_key
+        redaction.register_secret(token)
         self._client = httpx.AsyncClient(
             base_url=self.BASE_URL,
             headers={"Authorization": f"Bearer {token}"},
