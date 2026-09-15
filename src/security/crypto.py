@@ -93,7 +93,7 @@ def load_or_create_key() -> bytes:
         # believing their cache is encrypted when it is not.
         raise CacheEncryptionUnavailable(
             f"{e}\nCache encryption needs somewhere to keep its key. Set "
-            "YNAB_CACHE_ENCRYPTION=0 to store the cache in plaintext instead — an "
+            "YNAB_CACHE_ENCRYPTION=0 to store the cache in plaintext instead - an "
             "explicit choice, not a silent downgrade."
         ) from e
     _key = key

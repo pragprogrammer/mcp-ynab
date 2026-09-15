@@ -274,7 +274,7 @@ async def update_category_for_month(
         action=f"Set budgeted amount for {month}",
         plan_id=plan_id,
         subject=(
-            f'category "{before.get("name")}" ({category_id}) — '
+            f'category "{before.get("name")}" ({category_id}) - '
             f"budgeted {diff.format_money(before.get('budgeted'))}, "
             f"activity {diff.format_money(before.get('activity'))}, "
             f"balance {diff.format_money(before.get('balance'))}"

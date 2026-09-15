@@ -152,7 +152,7 @@ def render_prompt(
         lines.append(note)
 
     lines.append("")
-    lines.append("Confirm to apply exactly this. Nothing else will be sent.")
+    lines.append("Confirm to proceed with exactly this, and nothing else.")
     return "\n".join(lines)
 
 
