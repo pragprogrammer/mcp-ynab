@@ -1,6 +1,8 @@
 import httpx
 from typing import Any
 
+from pydantic import SecretStr
+
 from src.models import (
     Account,
     PlanDetail,
@@ -34,10 +36,14 @@ class YNABError(Exception):
 class YNABClient:
     BASE_URL = "https://api.ynab.com/v1"
 
-    def __init__(self, api_key: str, timeout: float = 30.0):
+    def __init__(self, api_key: str | SecretStr, timeout: float = 30.0):
+        # The only place the token is unwrapped. It goes straight into the httpx
+        # header and is never stored on self, so no attribute of this client can
+        # leak it into a repr or a tool return value.
+        token = api_key.get_secret_value() if isinstance(api_key, SecretStr) else api_key
         self._client = httpx.AsyncClient(
             base_url=self.BASE_URL,
-            headers={"Authorization": f"Bearer {api_key}"},
+            headers={"Authorization": f"Bearer {token}"},
             timeout=timeout,
         )
 

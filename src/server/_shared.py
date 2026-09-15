@@ -49,6 +49,7 @@ except Exception as e:
     sys.exit(1)
 
 mcp = MCPServer("ynab")
+# SecretStr in, unwrapped once inside the client when it builds the auth header.
 client = YNABClient(settings.ynab_api_key, timeout=settings.http_timeout)
 cache = CacheService(client, settings)
 
