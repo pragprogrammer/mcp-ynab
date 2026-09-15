@@ -2,9 +2,10 @@ from collections.abc import Sequence
 from datetime import datetime, timezone
 from typing import Any, TypeVar
 
-from sqlalchemy import JSON, Boolean, DateTime, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Integer, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from src.db.types import EncryptedJSON
 from src.models.common import YNABBaseModel
 
 T = TypeVar("T", bound=YNABBaseModel)
@@ -22,7 +23,9 @@ class CachedEntity(Base):
     plan_id: Mapped[str] = mapped_column(String, index=True)
     entity_type: Mapped[str] = mapped_column(String, index=True)
     entity_id: Mapped[str] = mapped_column(String)
-    data: Mapped[Any] = mapped_column(JSON)
+    # Encrypted: this is the whole entity, amounts and payees and memos included.
+    # The columns above stay plaintext because lookups and delta sync need them.
+    data: Mapped[Any] = mapped_column(EncryptedJSON("cached_entity", "data"))
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     cached_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
@@ -68,7 +71,7 @@ class ResponseCache(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     cache_key: Mapped[str] = mapped_column(String, unique=True, index=True)
-    data: Mapped[Any] = mapped_column(JSON)
+    data: Mapped[Any] = mapped_column(EncryptedJSON("response_cache", "data"))
     cached_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

@@ -40,6 +40,7 @@ from src.models.transaction import (
     Transaction,
 )
 from src.models.user import User
+from src.security.crypto import CacheDecryptionError, CacheEncryptionUnavailable
 from src.security.redaction import scrub
 from src.ynab_client import YNABClient, YNABError
 
@@ -151,7 +152,7 @@ def serialize_list(models, *, exclude_fields: list[str] | None = None) -> str:
 async def _ensure_db():
     global _db_initialized
     if not _db_initialized:
-        await init_db(settings.cache_db_path)
+        await init_db(settings.cache_db_path, encryption=settings.cache_encryption)
         _db_initialized = True
 
 
@@ -172,6 +173,8 @@ def handle_errors(func):
         try:
             await _ensure_db()
             return await func(*args, **kwargs)
+        except (CacheEncryptionUnavailable, CacheDecryptionError) as e:
+            return _error({"error": str(e)})
         except YNABError as e:
             return _error({"error": e.message, "error_id": e.error_id, "status_code": e.status_code})
         except httpx.HTTPStatusError as e:

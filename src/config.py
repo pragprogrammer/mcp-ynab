@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     allow_env_key: bool = Field(default=True, alias="YNAB_ALLOW_ENV_KEY")
 
     cache_db_path: str = Field(default_factory=_default_db_path)
+    # Off only for debugging: the cache holds payees, memos and amounts.
+    cache_encryption: bool = Field(default=True, alias="YNAB_CACHE_ENCRYPTION")
     http_timeout: float = 30.0
 
     # TTL for non-delta endpoints (seconds)
