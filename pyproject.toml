@@ -25,6 +25,11 @@ dependencies = [
     "pydantic-settings>=2.9.1,<3.0.0",
     "sqlalchemy[asyncio]>=2.0.41,<3.0.0",
     "aiosqlite>=0.21.0",
+    # Credential storage and cache encryption. keyring wraps the per-platform
+    # store (Windows Credential Manager, macOS Keychain, Secret Service);
+    # cryptography provides AES-256-GCM for the at-rest cache envelope.
+    "keyring>=25.0,<26.0",
+    "cryptography>=43.0,<47.0",
 ]
 
 [project.scripts]
