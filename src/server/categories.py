@@ -61,7 +61,7 @@ async def get_category(
     return serialize(cat, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.mutating_tool()
 @_shared.handle_errors
 async def create_category(
     plan_id: str,
@@ -105,7 +105,7 @@ async def create_category(
     return serialize(cat, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.mutating_tool()
 @_shared.handle_errors
 async def update_category(
     plan_id: str,
@@ -160,7 +160,7 @@ async def update_category(
     return serialize(cat, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.mutating_tool()
 @_shared.handle_errors
 async def create_category_group(
     plan_id: str,
@@ -186,7 +186,7 @@ async def create_category_group(
     return serialize(group, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.mutating_tool()
 @_shared.handle_errors
 async def update_category_group(
     plan_id: str,
@@ -244,7 +244,7 @@ async def get_category_for_month(
     return serialize(cat, exclude_fields=exclude_fields)
 
 
-@_shared.mcp.tool()
+@_shared.mutating_tool()
 @_shared.handle_errors
 async def update_category_for_month(
     category_id: str,

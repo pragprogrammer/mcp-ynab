@@ -54,6 +54,8 @@ class Settings(BaseSettings):
     cache_db_path: str = Field(default_factory=_default_db_path)
     # Off only for debugging: the cache holds payees, memos and amounts.
     cache_encryption: bool = Field(default=True, alias="YNAB_CACHE_ENCRYPTION")
+    # Opt-in. Writes stay enabled by default; see mutating_tool() in _shared.py.
+    read_only: bool = Field(default=False, alias="YNAB_READ_ONLY")
     http_timeout: float = 30.0
 
     # TTL for non-delta endpoints (seconds)

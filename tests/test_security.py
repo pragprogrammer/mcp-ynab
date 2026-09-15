@@ -503,3 +503,64 @@ class TestConsentGate:
             for attr in dir(mock_cache):
                 if attr.startswith(("create_", "update_", "delete_", "import_")):
                     getattr(mock_cache, attr).assert_not_called()
+
+
+# ── Read-only mode ────────────────────────────────────────────
+
+# Registration happens at import time, so read-only mode has to be exercised in
+# a fresh interpreter. Re-importing in-process would not re-run the decorators.
+_LIST_TOOLS = """
+import asyncio, json, sys
+from src.server import mcp
+tools = asyncio.run(mcp.list_tools())
+sys.stdout.write("TOOLS:" + json.dumps(sorted(t.name for t in tools)))
+"""
+
+GATED_TOOLS = {
+    "create_account",
+    "create_transaction",
+    "create_transactions",
+    "update_transaction",
+    "update_transactions",
+    "delete_transaction",
+    "import_transactions",
+    "create_category",
+    "update_category",
+    "create_category_group",
+    "update_category_group",
+    "update_category_for_month",
+    "update_payee",
+    "create_scheduled_transaction",
+    "update_scheduled_transaction",
+    "delete_scheduled_transaction",
+}
+
+
+def _tool_names(**env) -> set[str]:
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, "-c", _LIST_TOOLS],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "YNAB_API_KEY": "dummy-key-for-tests", **env},
+    )
+    assert result.returncode == 0, result.stderr
+    marker = result.stdout.index("TOOLS:") + len("TOOLS:")
+    return set(json.loads(result.stdout[marker:]))
+
+
+class TestReadOnlyMode:
+    def test_write_tools_are_not_registered(self):
+        names = _tool_names(YNAB_READ_ONLY="1")
+        assert not (GATED_TOOLS & names), "read-only mode still offers write tools"
+
+    def test_read_tools_survive(self):
+        names = _tool_names(YNAB_READ_ONLY="1")
+        for name in ("get_user", "list_plans", "list_accounts", "list_transactions"):
+            assert name in names
+
+    def test_writes_are_enabled_by_default(self):
+        # Read-only is opt-in: the default install can still write.
+        assert GATED_TOOLS <= _tool_names()

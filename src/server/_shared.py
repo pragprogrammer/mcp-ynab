@@ -40,6 +40,7 @@ from src.models.transaction import (
     Transaction,
 )
 from src.models.user import User
+from src.security import consent
 from src.security.consent import (
     ConsentDenied,
     ConsentUnavailable,
@@ -61,7 +62,24 @@ mcp = MCPServer("ynab")
 client = YNABClient(settings.ynab_api_key, timeout=settings.http_timeout)
 cache = CacheService(client, settings)
 
+# Belt and braces: mutating tools are not registered at all in read-only mode
+# (see mutating_tool below), so this guard should be unreachable. It costs
+# nothing and means a tool that somehow is reachable still refuses.
+consent.set_read_only(settings.read_only)
+
 _db_initialized = False
+
+
+def mutating_tool():
+    """Register a tool that changes YNAB data, unless read-only mode is on.
+
+    Gating at registration rather than inside the tool body means the tool never
+    appears in the model's tool list: there is nothing to call and nothing to
+    talk the server out of, instead of an offered capability that then refuses.
+    """
+    if settings.read_only:
+        return lambda func: func
+    return mcp.tool()
 
 
 # Default exclude sets per model. Used when a tool is called without an explicit
