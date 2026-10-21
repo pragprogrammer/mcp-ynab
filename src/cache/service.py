@@ -37,13 +37,20 @@ logger = logging.getLogger(__name__)
 
 # Delta sync endpoint keys (used for server_knowledge tracking and invalidation)
 ENDPOINT_ACCOUNTS = "accounts"
-ENDPOINT_TRANSACTIONS = "transactions"
+# Versioned so caches built before full-history sync are rebuilt automatically:
+# they only ever held YNAB's default one-year window (see FULL_HISTORY_SINCE).
+ENDPOINT_TRANSACTIONS = "transactions:full-history"
 ENDPOINT_CATEGORIES = "categories"
 ENDPOINT_PAYEES = "payees"
 ENDPOINT_MONEY_MOVEMENTS = "money_movements"
 ENDPOINT_MONEY_MOVEMENT_GROUPS = "money_movement_groups"
 ENDPOINT_MONTHS = "months"
 ENDPOINT_SCHEDULED_TRANSACTIONS = "scheduled_transactions"
+
+# YNAB's transaction endpoints return only roughly the last year when no
+# since_date is sent. Pass an explicit early date so the full history is
+# fetched; callers' since_date filters are still applied on top.
+FULL_HISTORY_SINCE = "2000-01-01"
 
 # Delta sync entity type keys (used for entity storage)
 ENTITY_ACCOUNT = "account"
@@ -281,7 +288,9 @@ class CacheService:
     async def _sync_transactions(self, plan_id: str) -> list[Transaction]:
         return await self._delta_sync(
             plan_id, ENDPOINT_TRANSACTIONS, ENTITY_TRANSACTION, Transaction,
-            lambda bid, **kw: self.client.get_transactions(bid, **kw),
+            lambda bid, **kw: self.client.get_transactions(
+                bid, since_date=FULL_HISTORY_SINCE, **kw
+            ),
         )
 
     async def get_transactions(
@@ -350,7 +359,8 @@ class CacheService:
             return cached
         txns = await self.retry.execute(
             lambda: self.client.get_transactions_by_category(
-                category_id, plan_id, since_date=since_date, type=type
+                category_id, plan_id,
+                since_date=since_date or FULL_HISTORY_SINCE, type=type
             ),
             cache_key=cache_key,
         )
@@ -400,7 +410,8 @@ class CacheService:
             return cached
         txns = await self.retry.execute(
             lambda: self.client.get_transactions_by_payee(
-                payee_id, plan_id, since_date=since_date, type=type
+                payee_id, plan_id,
+                since_date=since_date or FULL_HISTORY_SINCE, type=type
             ),
             cache_key=cache_key,
         )
