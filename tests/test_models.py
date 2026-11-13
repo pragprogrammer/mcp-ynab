@@ -1,3 +1,4 @@
+import pytest
 from src.models import (
     Account,
     PlanDetail,
@@ -75,7 +76,7 @@ class TestAccount:
 
 
 class TestCategory:
-    def test_default_exclude_hides_advanced_goal_fields(self):
+    def test_default_exclude_hides_raw_cadence_fields_but_keeps_derived(self):
         c = Category(id="c1", category_group_id="g1", name="Food",
                      goal_type="TB", goal_target=500000, goal_cadence=1,
                      goal_day=15, deleted=True)
@@ -85,8 +86,43 @@ class TestCategory:
                        "goal_needs_whole_amount", "goal_day", "goal_cadence",
                        "goal_cadence_frequency"]:
             assert hidden not in result
+        for shown in ["goal_period", "goal_monthly_equivalent"]:
+            assert shown in result
         assert result["goal_type"] == "TB"
         assert result["goal_target"] == 500000
+
+    @pytest.mark.parametrize(
+        "cadence,freq,target,period,monthly",
+        [
+            (1, 1, 100000, "monthly", 100000),
+            (1, 2, 200000, "every_2_months", 100000),
+            (1, 3, 300000, "every_3_months", 100000),
+            (2, 1, 100000, "weekly", 433333),
+            (2, 2, 100000, "every_2_weeks", 216667),
+            (2, 3, 100000, "every_3_weeks", 144444),
+            (3, 1, 200000, "every_2_months", 100000),
+            (12, 1, 1100000, "every_11_months", 100000),
+            (13, 1, 1200000, "yearly", 100000),
+            (13, 2, 2400000, "every_2_years", 100000),
+            (13, 3, 3600000, "every_3_years", 100000),
+            (14, 1, 2400000, "every_2_years", 100000),
+            (0, 1, 100000, "none", None),
+            (None, None, 100000, "none", None),
+            (1, 1, None, "monthly", None),
+        ],
+    )
+    def test_goal_period_and_monthly_equivalent(self, cadence, freq, target, period, monthly):
+        c = Category(id="c1", category_group_id="g1", name="Food", goal_cadence=cadence,
+                     goal_cadence_frequency=freq, goal_target=target)
+        assert c.goal_period == period
+        assert c.goal_monthly_equivalent == monthly
+
+    def test_derived_fields_serialize_in_json(self):
+        c = Category(id="c1", category_group_id="g1", name="Food", goal_cadence=2,
+                     goal_cadence_frequency=1, goal_target=100000)
+        result = c.model_dump(by_alias=True, mode="json", exclude=CATEGORY_DEFAULT_EXCLUDE)
+        assert result["goal_period"] == "weekly"
+        assert result["goal_monthly_equivalent"] == 433.333
 
     def test_roundtrip_preserves_all_fields(self):
         c = Category(id="c1", category_group_id="g1", name="Food", budgeted=500000)
